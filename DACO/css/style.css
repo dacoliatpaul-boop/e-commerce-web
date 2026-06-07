@@ -1,0 +1,35 @@
+.navigation {
+    list-style-type: none;
+    overflow: hidden;
+    background-color: BFBFBF, 0.800;
+    text-align: center;
+    font-size: 26px;
+    font-family: 'Joan', serif;
+    box-shadow: 0px 4px 4px rgba(14, 14, 14, 0.600);
+}
+.navigation li {
+    float: none;
+    display: inline-block;
+}
+.navigation li a {
+    display: block;
+    color: rgb(12, 12, 12);
+    padding: 20px 80px;
+    text-decoration: none;
+    text-shadow: 0px 4px 4px rgba(12, 12, 12, 0.400);
+}
+.logo{
+    font-size: 36px;
+    font-family: 'Joan', serif;
+    text-shadow: 0px 4px 4px rgba(12, 12, 12, 0.600);
+    padding: 30px 20px;
+}
+.navigation li a:hover {
+    text-shadow: 0px 4px 4px rgba(255, 255, 255, 0.400);
+}
+nav .textlogo{
+    float: left;
+}
+nav .login{
+    float: right;
+}

@@ -1,0 +1,46 @@
+.DCO {
+    font-size: 128px;
+    font-family: 'Joan', serif;
+    font-weight: bold;
+    text-align: center;
+    margin: 100px auto;
+    display: block;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.3), 
+        rgba(255, 255, 255, 0.1));
+    backdrop-filter: blur(10px);
+    padding: 30px 60px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+
+    color: #121212;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+.login-page{
+    width: 100%;
+    max-width: 440px;
+    background: #F8F8F8;
+    border: 1px solid #1a1a1a;
+    border-radius: 20px;
+    align-items: center;
+    padding: 40px 40px 40px;
+    margin: 50px auto;
+
+}
+.login-page h1{
+    text-align: center;
+    font-size: 48px;
+    font-family: 'Joan', serif;
+    font-weight: bold;
+    color: #1a1a1a;
+
+    margin-bottom: 30px;
+}
+
+.message{
+    text-align: center;
+    color: #1a1a1aa9;
+    font-family: 'Joan', serif;
+    font-weight: semi-bold;
+    font-size: 10px;
+}
