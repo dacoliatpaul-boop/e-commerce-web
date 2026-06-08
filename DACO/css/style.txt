@@ -1,0 +1,153 @@
+/* nav */
+.top-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+/* Topbar: logo + login — merged into the navbar row */
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    margin-left: 12px;
+}
+
+.textlogo {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #111;
+}
+
+.login-btn {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    background: #fd0d0d;
+    padding: 7px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background .2s, transform .15s;
+}
+
+.login-btn:hover {
+    background: #c70000;
+    transform: translateY(-1px);
+}
+
+.hamburger-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.hamburger-btn span {
+    display: block;
+    width: 28px;
+    height: 3px;
+    background: #111111;
+    border-radius: 3px;
+    transition: transform .3s, opacity .3s;
+}
+
+/* Animate to X when open */
+.hamburger-btn.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.hamburger-btn.open span:nth-child(2) { opacity: 0; }
+.hamburger-btn.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+
+.drawer-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: .3s;
+    z-index: 999;
+}
+
+.drawer-overlay.show{
+    opacity: 1;
+    visibility: visible;
+}
+
+
+.side-drawer{
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 260px;
+    height: 100%;
+    background: white;
+    box-shadow: 2px 0 10px rgba(0,0,0,.2);
+    transition: .3s;
+    z-index: 1001;
+}
+
+.side-drawer.open{
+    left: 0;
+}
+
+.drawer-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.drawer-brand{
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.drawer-close{
+    border: none;
+    background: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.drawer-nav{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.drawer-nav li a{
+    display: block;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #333;
+    transition: .2s;
+}
+
+.drawer-nav li a:hover{
+    background: #f1f1f1;
+    color: #fd0d0d;
+}
+
+.drawer-footer{
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    font-size: 12px;
+    color: #777;
+}
