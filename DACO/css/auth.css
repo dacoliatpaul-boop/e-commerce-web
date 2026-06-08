@@ -7,14 +7,14 @@
 }
 
 body {
-    background: #F0EDE8;
+    background: #ffffff;
     min-height: 100vh;
     font-family: 'Joan', serif;
 }
 
 /* ── Brand logo ── */
 .DCO {
-    font-size: 72px;
+    font-size: 92px;
     font-family: 'Joan', serif;
     font-weight: bold;
     text-align: center;
