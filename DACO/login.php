@@ -14,34 +14,38 @@
 
 <a class="DCO" href="index.php">DCO</a>
 
-<div class="login-page">
-    <h1>Login</h1>
-    <p class="message">WELCOME TO DCO</p>
+<div class="page-wrapper">
 
-    <form method="POST" action="login.php">
+    <!-- Back button left of card -->
+    <a class="btn-back" href="index.php">&#8592; BACK</a>
 
-        <div class="form">
-            <label for="email"></label>
-            <input type="email" id="email" name="email"
-                placeholder="EMAIL" required
-                value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
-        </div>
+    <div class="login-page">
+        <h1>Login</h1>
+        <p class="message">WELCOME TO DCO</p>
 
-        <div class="form">
-            <label for="password"></label>
-            <input type="password" id="password" name="password"
-                placeholder="PASSWORD" required>
-            <a href="forgot-password.php">FORGOT PASSWORD?</a>
-        </div>
+        <form method="POST" action="login.php">
 
-        <div class="form">
-            <button type="submit">LOGIN</button>
-        </div>
+            <div class="form">
+                <input type="email" id="email" name="email"
+                    placeholder="EMAIL" required
+                    value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+            </div>
 
-        <p class="register">DON'T HAVE AN ACCOUNT? <a href="register.php">REGISTER</a></p>
-        <p class="back-link"><a href="index.php">← BACK TO HOME</a></p>
+            <div class="form">
+                <input type="password" id="password" name="password"
+                    placeholder="PASSWORD" required>
+                <a href="forgot-password.php">FORGOT PASSWORD?</a>
+            </div>
 
-    </form>
+            <div class="form">
+                <button type="submit">LOGIN</button>
+            </div>
+
+            <p class="register">DON'T HAVE AN ACCOUNT? <a href="register.php">REGISTER</a></p>
+
+        </form>
+    </div>
+
 </div>
 
 </body>
