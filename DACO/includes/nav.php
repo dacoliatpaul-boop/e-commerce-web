@@ -1,3 +1,12 @@
+<?php
+// nav.php must be included AFTER session_start() has been called (app.php handles that).
+// If included on a page that doesn't use app.php, start the session here safely.
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$loggedIn      = !empty($_SESSION['user_id']);
+$userEmail     = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
+?>
 <link rel="stylesheet" type="text/css" href="css/style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,8 +25,15 @@
         <a href="contact.php" class="sidebar-link">Contact</a>
     </nav>
     <div class="sidebar-footer">
-        <a href="login.php" class="sidebar-auth-btn">Login</a>
-        <a href="register.php" class="sidebar-auth-btn outline">Register</a>
+        <?php if ($loggedIn): ?>
+            <div class="sidebar-user-info">
+                <span class="sidebar-user-email"><?= $userEmail ?></span>
+            </div>
+            <a href="logout.php" class="sidebar-auth-btn logout-btn">Logout</a>
+        <?php else: ?>
+            <a href="login.php" class="sidebar-auth-btn">Login</a>
+            <a href="register.php" class="sidebar-auth-btn outline">Register</a>
+        <?php endif; ?>
     </div>
 </aside>
 
@@ -32,9 +48,15 @@
         <a href="index.php" class="topbar-logo">DCO</a>
     </div>
     <div class="topbar-right">
-        <a href="login.php" class="auth-link">Login</a>
-        <span class="auth-sep">/</span>
-        <a href="register.php" class="auth-link">Register</a>
+        <?php if ($loggedIn): ?>
+            <span class="topbar-user-email"><?= $userEmail ?></span>
+            <span class="auth-sep">/</span>
+            <a href="logout.php" class="auth-link logout-link">Logout</a>
+        <?php else: ?>
+            <a href="login.php" class="auth-link">Login</a>
+            <span class="auth-sep">/</span>
+            <a href="register.php" class="auth-link">Register</a>
+        <?php endif; ?>
     </div>
 </header>
 
