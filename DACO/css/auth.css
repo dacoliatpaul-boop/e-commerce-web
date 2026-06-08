@@ -14,14 +14,14 @@ body {
 
 /* ── Brand logo ── */
 .DCO {
-    font-size: 72px;
+    font-size: 88px;
     font-family: 'Joan', serif;
     font-weight: bold;
     text-align: center;
     display: block;
     color: #121212;
     letter-spacing: 6px;
-    padding: 40px 0 0;
+    padding: 40px 0 16px;
     text-decoration: none;
 }
 
@@ -33,6 +33,9 @@ body {
     gap: 20px;
     margin: 24px auto 60px;
     padding: 0 16px;
+    max-width: 520px;
+    width: 100%;
+    position: relative;
 }
 
 /* ── Back button (left side of card) ── */
@@ -40,7 +43,9 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-top: 20px;          /* aligns roughly with top of card content */
+    position: absolute;
+    left: 16px;
+    top: 20px;
     padding: 10px 16px;
     background: #fff;
     border: 1px solid #D8D4CE;
