@@ -462,8 +462,9 @@ body {
 
 .product-img-wrap {
     position: relative;
-    width: 100%;
-    padding-bottom: 125%;
+    width: 300;
+    height: 500;
+    padding-bottom: 0%;
     background: #f0efec;
     overflow: hidden;
     margin-bottom: 14px;
@@ -689,8 +690,8 @@ body {
 }
 
 /* ── Wide card (index only) ── */
-.product-card.wide { grid-column: span 2; }
-.product-card.wide .product-img-wrap { padding-bottom: 60%; }
+.product-card.wide { grid-column: span 1; }
+.product-card.wide .product-img-wrap { padding-bottom: 0%; }
 
 /* ── Dark banner ── */
 #banner-strip {

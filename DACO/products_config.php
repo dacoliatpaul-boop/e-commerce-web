@@ -31,18 +31,42 @@ $products = [
 
     // ── CLOTHES ─────────────────────────────────────────────────
     [
-        'name'     => 'Oversized Linen Coat',
+        'name'     => 'White Executive Longsleeve',
         'category' => 'Clothes',
         'price'    => 4800,
-        'image'    => '',          // e.g. 'images/linen-coat.jpg'
+        'image'    => 'img/shirt2.png',          // e.g. 'images/linen-coat.jpg'
         'featured' => true,
+        'wide'     => true,        // big card on homepage
+    ],
+    [
+        'name'     => 'Black Executive Longsleeve',
+        'category' => 'Clothes',
+        'price'    => 4800,
+        'image'    => 'img/shirt1.png',          // e.g. 'images/linen-coat.jpg'
+        'featured' => false,
+        'wide'     => true,        // big card on homepage
+    ],
+    [
+        'name'     => 'Dark Blue Executive Longsleeve',
+        'category' => 'Clothes',
+        'price'    => 4800,
+        'image'    => 'img/shirt3.png',          // e.g. 'images/linen-coat.jpg'
+        'featured' => false,
+        'wide'     => true,        // big card on homepage
+    ],
+    [
+        'name'     => 'Biege Executive Longsleeve',
+        'category' => 'Clothes',
+        'price'    => 4800,
+        'image'    => 'img/shirt4.png',          // e.g. 'images/linen-coat.jpg'
+        'featured' => false,
         'wide'     => true,        // big card on homepage
     ],
     [
         'name'     => 'Raw Hem Denim Trousers',
         'category' => 'Clothes',
         'price'    => 2100,
-        'image'    => '',
+        'image'    => 'img/baggy1.jpeg',
         'featured' => true,
         'wide'     => false,
     ],
@@ -50,7 +74,7 @@ $products = [
         'name'     => 'Washed Cotton Tee',
         'category' => 'Clothes',
         'price'    => 890,
-        'image'    => '',
+        'image'    => 'img/cotton1.jpeg',
         'featured' => false,
         'wide'     => false,
     ],
@@ -58,7 +82,7 @@ $products = [
         'name'     => 'Merino Wool Crewneck',
         'category' => 'Clothes',
         'price'    => 3400,
-        'image'    => '',
+        'image'    => 'img/wool1.jpeg',
         'featured' => false,
         'wide'     => false,
     ],
@@ -68,15 +92,7 @@ $products = [
         'name'     => 'Minimal Leather Bag',
         'category' => 'Accessories',
         'price'    => 3200,
-        'image'    => '',
-        'featured' => true,
-        'wide'     => false,
-    ],
-    [
-        'name'     => 'Titanium Card Holder',
-        'category' => 'Accessories',
-        'price'    => 1400,
-        'image'    => '',
+        'image'    => 'img/bag1.jpeg',
         'featured' => true,
         'wide'     => false,
     ],
@@ -84,7 +100,7 @@ $products = [
         'name'     => 'Woven Leather Belt',
         'category' => 'Accessories',
         'price'    => 1100,
-        'image'    => '',
+        'image'    => 'img/belt1.jpeg',
         'featured' => false,
         'wide'     => false,
     ],
@@ -92,7 +108,7 @@ $products = [
         'name'     => 'Brushed Silver Ring',
         'category' => 'Accessories',
         'price'    => 980,
-        'image'    => '',
+        'image'    => 'img/ring1.jpeg',
         'featured' => false,
         'wide'     => false,
     ],
@@ -102,7 +118,7 @@ $products = [
         'name'     => 'DCO Wireless Speaker',
         'category' => 'Devices',
         'price'    => 5500,
-        'image'    => '',
+        'image'    => 'img/speaker1.jpeg',
         'featured' => true,
         'wide'     => false,
     ],
@@ -110,7 +126,7 @@ $products = [
         'name'     => 'Noise-Cancel Earphones',
         'category' => 'Devices',
         'price'    => 4200,
-        'image'    => '',
+        'image'    => 'img/device1.jpeg',
         'featured' => false,
         'wide'     => false,
     ],
@@ -119,18 +135,19 @@ $products = [
     [
         'name'     => 'Noir Santal Eau de Parfum',
         'category' => 'Fragrance',
-        'price'    => 2600,
-        'image'    => '',
+        'price'    => 12600,
+        'image'    => 'img/perfume1.jpeg',
         'featured' => true,
         'wide'     => false,
     ],
     [
         'name'     => 'Amber & Oud Diffuser Set',
         'category' => 'Fragrance',
-        'price'    => 1800,
-        'image'    => '',
+        'price'    => 11800,
+        'image'    => 'img/perfume2.jpeg',
         'featured' => false,
         'wide'     => false,
     ],
 
 ];
+?>
