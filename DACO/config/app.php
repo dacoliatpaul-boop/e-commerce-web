@@ -1,35 +1,27 @@
 <?php
-/**
- * DCO — App Config
- * Session cookie lifetime = 0 means the cookie is a "session cookie":
- * it lives while the browser is open, and is deleted when the browser closes.
- * The cart uses sessionStorage (JS) which resets on page refresh.
- */
-
-// Must be called BEFORE session_start()
-ini_set('session.cookie_lifetime', 0);        // cookie deleted when browser closes
-ini_set('session.gc_maxlifetime',  7200);     // server-side session data lives 2 hrs
+// config/app.php — PDO connection, included by login.php and register.php
 
 session_start();
 
-// ── Database connection ────────────────────────────────────────
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'dco');
-define('DB_USER', 'root');       // change to your DB username
-define('DB_PASS', '');           // change to your DB password
+// ── Database Configuration ──────────────────────────────────────────────────
+define('DB_HOST',     'localhost');
+define('DB_NAME',     'dcoweb');       // ← new database name
+define('DB_USER',     'root');
+define('DB_PASSWORD', '');             // change if your MySQL root has a password
+define('DB_CHARSET',  'utf8mb4');
 
+// ── PDO Connection ──────────────────────────────────────────────────────────
 try {
     $pdo = new PDO(
-        'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET,
         DB_USER,
-        DB_PASS,
-        [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ]
+        DB_PASSWORD
     );
+    $pdo->setAttribute(PDO::ATTR_ERRMODE,            PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES,   false);
 } catch (PDOException $e) {
-    // In production, log this and show a friendly error page
-    die('Database connection failed. Please try again later.');
+    die("<h2 style='color:red;font-family:sans-serif;padding:20px;'>
+         Database connection failed: " . htmlspecialchars($e->getMessage()) . "
+         </h2>");
 }
