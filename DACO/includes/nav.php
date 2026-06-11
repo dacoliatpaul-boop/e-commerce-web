@@ -112,35 +112,13 @@ $userEmail  = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   DCO CART — sessionStorage
-   Cart resets on page refresh and when the browser is closed.
-   Login state is separate (PHP session cookie, persists across
-   refreshes, cleared when all browser windows close).
+   DCO CART — Server-side via cart.php API
+   Cart is stored in the DB (cart_items table) per logged-in user.
+   Unauthenticated users are redirected to login.php on add.
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
     'use strict';
-
-    // ── Storage helpers ──────────────────────────────────────────
-    var CART_KEY = 'dco_cart';
-
-    function loadCart() {
-        try {
-            var raw = sessionStorage.getItem(CART_KEY);
-            return raw ? JSON.parse(raw) : [];
-        } catch (e) {
-            return [];
-        }
-    }
-
-    function saveCart(items) {
-        try {
-            sessionStorage.setItem(CART_KEY, JSON.stringify(items));
-        } catch (e) { /* storage full or unavailable */ }
-    }
-
-    // ── State ────────────────────────────────────────────────────
-    var cart = loadCart();
 
     // ── DOM refs ─────────────────────────────────────────────────
     var drawer      = document.getElementById('cart-drawer');
@@ -151,9 +129,9 @@ $userEmail  = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
     var totalAmount = document.getElementById('cart-total-amount');
 
     // ── Badge ────────────────────────────────────────────────────
-    function updateBadge() {
-        var count = cart.length;
-        badge.textContent = count > 9 ? '9+' : count;
+    function updateBadge(count) {
+        count = count || 0;
+        badge.textContent = count > 9 ? '9+' : (count > 0 ? count : '');
         if (count > 0) {
             badge.classList.add('visible');
         } else {
@@ -161,63 +139,117 @@ $userEmail  = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
         }
     }
 
-    // ── Render cart items ────────────────────────────────────────
-    function renderCart() {
-        // Clear existing items (keep empty msg)
+    // ── Render cart items from server data ───────────────────────
+    function renderCart(items, total) {
         var nodes = itemsList.querySelectorAll('.cart-item');
         nodes.forEach(function (n) { n.parentNode.removeChild(n); });
 
-        if (cart.length === 0) {
+        if (!items || items.length === 0) {
             emptyMsg.style.display = '';
             totalAmount.textContent = '\u20B1 0';
             return;
         }
 
         emptyMsg.style.display = 'none';
-        var total = 0;
 
-        cart.forEach(function (item, idx) {
-            total += item.price;
+        items.forEach(function (item) {
             var el = document.createElement('div');
             el.className = 'cart-item';
             el.innerHTML =
                 '<div class="cart-item-thumb">' +
-                    '<svg viewBox="0 0 40 40" fill="none" stroke="#171717" stroke-width="1.2">' +
-                    '<rect x="4" y="8" width="32" height="26" rx="1"/>' +
-                    '<path d="M4 14h32"/><circle cx="14" cy="24" r="4"/>' +
-                    '<path d="M22 20h10M22 24h8M22 28h6"/></svg>' +
+                    (item.image
+                        ? '<img src="' + escHtml(item.image) + '" alt="' + escHtml(item.name) + '" style="width:100%;height:100%;object-fit:cover;">'
+                        : '<svg viewBox="0 0 40 40" fill="none" stroke="#171717" stroke-width="1.2"><rect x="4" y="8" width="32" height="26" rx="1"/><path d="M4 14h32"/><circle cx="14" cy="24" r="4"/><path d="M22 20h10M22 24h8M22 28h6"/></svg>'
+                    ) +
                 '</div>' +
                 '<div class="cart-item-info">' +
                     '<p class="cart-item-name">' + escHtml(item.name) + '</p>' +
                     '<p class="cart-item-cat">'  + escHtml(item.category) + '</p>' +
                     '<p class="cart-item-price">\u20B1 ' + Number(item.price).toLocaleString() + '</p>' +
+                    (item.quantity > 1 ? '<p class="cart-item-qty">Qty: ' + item.quantity + '</p>' : '') +
                 '</div>' +
-                '<button class="cart-item-remove" data-idx="' + idx + '" aria-label="Remove">\u00D7</button>';
+                '<button class="cart-item-remove" data-product-id="' + item.product_id + '" aria-label="Remove">\u00D7</button>';
             itemsList.appendChild(el);
         });
 
-        totalAmount.textContent = '\u20B1 ' + total.toLocaleString();
+        totalAmount.textContent = '\u20B1 ' + Number(total).toLocaleString();
     }
 
-    // ── Remove item ──────────────────────────────────────────────
+    // ── Fetch cart from server ───────────────────────────────────
+    function refreshCart() {
+        fetch('cart.php?action=view')
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    renderCart(data.cart, data.cart_total);
+                    updateBadge(data.cart_count);
+                }
+            })
+            .catch(function () { /* not logged in or network error */ });
+    }
+
+    // ── Remove item via API ──────────────────────────────────────
     itemsList.addEventListener('click', function (e) {
         var btn = e.target.closest('.cart-item-remove');
         if (!btn) return;
-        var idx = parseInt(btn.getAttribute('data-idx'), 10);
-        cart.splice(idx, 1);
-        saveCart(cart);
-        updateBadge();
-        renderCart();
+        var productId = btn.getAttribute('data-product-id');
+        var fd = new FormData();
+        fd.append('action', 'remove');
+        fd.append('product_id', productId);
+
+        fetch('cart.php', { method: 'POST', body: fd })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    renderCart(data.cart, data.cart_total);
+                    updateBadge(data.cart_count);
+                }
+            });
     });
 
     // ── Public API — called by Add to Cart / Buy Now buttons ─────
-    window.DCO_addToCart = function (name, category, price) {
-        cart.push({ name: name, category: category, price: parseFloat(price) });
-        saveCart(cart);
-        updateBadge();
-        renderCart();
-        openCart();
+    // Signature matches what products.php and index.php already pass:
+    // DCO_addToCart(name, category, price, productId, qty)
+    window.DCO_addToCart = function (name, category, price, productId, qty) {
+        if (!productId) {
+            console.error('DCO_addToCart: productId is required');
+            return;
+        }
+        qty = qty || 1;
+
+        var fd = new FormData();
+        fd.append('action',     'add');
+        fd.append('product_id', productId);
+        fd.append('quantity',   qty);
+
+        fetch('cart.php', { method: 'POST', body: fd })
+            .then(function (res) {
+                // Not logged in → redirect to login
+                if (res.status === 401) {
+                    window.location.href = 'login.php';
+                    return null;
+                }
+                return res.json();
+            })
+            .then(function (data) {
+                if (!data) return;
+                if (data.success) {
+                    renderCart(data.cart, data.cart_total);
+                    updateBadge(data.cart_count);
+                    openCart();
+                } else {
+                    alert(data.message || 'Could not add to cart.');
+                }
+            })
+            .catch(function (err) {
+                console.error('Cart error:', err);
+            });
     };
+
+    // ── Checkout button ──────────────────────────────────────────
+    document.getElementById('cart-checkout-btn').addEventListener('click', function () {
+        window.location.href = 'checkout.php';
+    });
 
     // ── Open / close cart ────────────────────────────────────────
     function openCart() {
@@ -226,7 +258,6 @@ $userEmail  = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
     }
     function closeCart() {
         drawer.classList.remove('open');
-        // only remove overlay if sidebar is also closed
         if (!document.getElementById('sidebar').classList.contains('open')) {
             overlay.classList.remove('active');
         }
@@ -263,9 +294,9 @@ $userEmail  = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
     });
 
     // ── Topbar hide/show on scroll ────────────────────────────────
-    var topbar   = document.getElementById('topbar');
-    var lastY    = 0;
-    var ticking  = false;
+    var topbar  = document.getElementById('topbar');
+    var lastY   = 0;
+    var ticking = false;
 
     window.addEventListener('scroll', function () {
         if (!ticking) {
@@ -299,9 +330,8 @@ $userEmail  = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
             .replace(/"/g, '&quot;');
     }
 
-    // ── Init ──────────────────────────────────────────────────────
-    updateBadge();
-    renderCart();
+    // ── Init: load cart from server on page load ──────────────────
+    refreshCart();
 
 })();
 </script>

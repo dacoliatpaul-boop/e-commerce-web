@@ -47,6 +47,7 @@ $featured = array_filter($products, function($p) { return !empty($p['featured'])
             $cardClass = 'product-card' . (!empty($p['wide']) ? ' wide' : '');
             $jsName    = addslashes($p['name']);
             $jsCat     = addslashes($p['category']);
+            $productId = (int) ($p['id'] ?? 0);
             $cardId    = 'showcase-card-' . strtolower(preg_replace('/\s+/', '-', $p['name']));
             $hasImg    = !empty($p['image']);
         ?>
@@ -67,7 +68,7 @@ $featured = array_filter($products, function($p) { return !empty($p['featured'])
             <span class="product-name"><?php echo htmlspecialchars($p['name']); ?></span>
             <span class="product-price"><?php echo $display; ?></span>
             <button class="btn-add-cart-index"
-                onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>','<?php echo $p['price']; ?>')">
+                onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>',<?php echo $p['price']; ?>,<?php echo $productId; ?>)">
                 + Add to Cart
             </button>
         </div>

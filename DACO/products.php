@@ -50,12 +50,13 @@ if (!isset($products)) { $products = []; }
         $placeholder_svg .= '</svg>';
 
         foreach ($products as $i => $p) {
-            $slug    = strtolower($p['category']);
-            $display = '&#8369; ' . number_format($p['price']);
-            $jsName  = addslashes($p['name']);
-            $jsCat   = addslashes($p['category']);
-            $cardId  = 'product-' . ($i + 1);
-            $hasImg  = !empty($p['image']);
+            $slug      = strtolower($p['category']);
+            $display   = '&#8369; ' . number_format($p['price']);
+            $jsName    = addslashes($p['name']);
+            $jsCat     = addslashes($p['category']);
+            $productId = (int) ($p['id'] ?? 0);
+            $cardId    = 'product-' . ($i + 1);
+            $hasImg    = !empty($p['image']);
         ?>
         <div class="product-card" id="<?php echo $cardId; ?>" data-category="<?php echo $slug; ?>">
             <a href="#" class="product-img-wrap">
@@ -75,11 +76,11 @@ if (!isset($products)) { $products = []; }
             <span class="product-price"><?php echo $display; ?></span>
             <div class="product-actions">
                 <button class="btn-buy-now"
-                    onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>','<?php echo $p['price']; ?>')">
+                    onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>',<?php echo $p['price']; ?>,<?php echo $productId; ?>)">
                     Buy Now
                 </button>
                 <button class="btn-add-cart"
-                    onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>','<?php echo $p['price']; ?>')">
+                    onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>',<?php echo $p['price']; ?>,<?php echo $productId; ?>)">
                     + Cart
                 </button>
             </div>
