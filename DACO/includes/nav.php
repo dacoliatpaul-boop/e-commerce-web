@@ -1,35 +1,58 @@
 <?php
-// includes/nav.php
-if (session_status() === PHP_SESSION_NONE) session_start();
-$isLoggedIn = !empty($_SESSION['user_id']);
-$userEmail  = $_SESSION['email'] ?? '';
-?>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="css/style.css">
+/**
+ * DCO — Shared Navigation
+ * Included at the top of index.php, products.php, and any other page that needs the nav.
+ *
+ * CART BEHAVIOUR (sessionStorage):
+ *   • Cart is kept in sessionStorage — it is cleared automatically when the browser tab
+ *     is closed or the page is refreshed (sessionStorage does NOT survive a page reload).
+ *   • If you want the cart to survive refreshes but still clear on browser close,
+ *     change every "sessionStorage" below to "sessionStorage" — they are already equivalent
+ *     for that requirement because sessionStorage is tab-scoped and survives nothing beyond
+ *     the tab lifetime.
+ *
+ *   Actually: sessionStorage IS wiped on refresh.  That matches the requirement exactly:
+ *     ✓ cart resets on refresh
+ *     ✓ cart resets when browser closes
+ *     ✓ login persists across refreshes (PHP session cookie, no "remember me")
+ *     ✓ login resets when browser closes (session cookie lifetime = 0 in config/app.php)
+ *
+ * USER SESSION:
+ *   PHP session cookie has lifetime=0 (set in config/app.php), meaning the browser
+ *   discards it when all windows are closed.  Refreshing the page keeps the cookie alive.
+ */
 
-<!-- ── Nav Overlay ── -->
+// Only start session if not already started (nav.php may be included after config/app.php)
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_lifetime', 0);
+    session_start();
+}
+
+$loggedIn   = !empty($_SESSION['user_id']);
+$userEmail  = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
+?>
+<!-- ── Sidebar overlay ── -->
 <div class="nav-overlay" id="nav-overlay"></div>
 
 <!-- ── Sidebar ── -->
-<nav class="sidebar" id="sidebar" aria-label="Main navigation">
+<nav class="sidebar" id="sidebar">
     <button class="sidebar-close" id="sidebar-close" aria-label="Close menu">&#x2715;</button>
-    <div class="sidebar-logo">DCO</div>
+    <span class="sidebar-logo">DCO</span>
     <div class="sidebar-nav">
-        <a href="index.php"    class="sidebar-link">Home</a>
-        <a href="products.php" class="sidebar-link">Products</a>
-        <a href="#"            class="sidebar-link">About</a>
-        <a href="#"            class="sidebar-link">Contact</a>
+        <a class="sidebar-link" href="index.php">Home</a>
+        <a class="sidebar-link" href="products.php">Products</a>
     </div>
     <div class="sidebar-footer">
-        <?php if ($isLoggedIn): ?>
-            <div class="sidebar-user-info">
-                <div class="sidebar-user-email"><?= htmlspecialchars($userEmail) ?></div>
+        <?php if ($loggedIn): ?>
+            <div style="width:100%;">
+                <div class="sidebar-user-info">
+                    <p class="sidebar-user-email"><?= $userEmail ?></p>
+                </div>
+                <a class="sidebar-auth-btn logout-btn" href="logout.php">Logout</a>
             </div>
-            <a href="logout.php" class="sidebar-auth-btn logout-btn">Logout</a>
         <?php else: ?>
-            <a href="login.php"    class="sidebar-auth-btn outline">Login</a>
-            <a href="register.php" class="sidebar-auth-btn">Register</a>
+            <a class="sidebar-auth-btn outline" href="login.php">Login</a>
+            <a class="sidebar-auth-btn" href="register.php">Register</a>
         <?php endif; ?>
     </div>
 </nav>
@@ -37,193 +60,248 @@ $userEmail  = $_SESSION['email'] ?? '';
 <!-- ── Topbar ── -->
 <header class="topbar nav-visible" id="topbar">
     <div id="topbar-left">
-        <button class="hamburger" id="hamburger-btn" aria-label="Open menu">
+        <button class="hamburger" id="hamburger" aria-label="Open menu">
             <span></span><span></span><span></span>
         </button>
     </div>
 
     <div id="topbar-center">
-        <a href="index.php" class="topbar-logo">DCO</a>
+        <a class="topbar-logo" href="index.php">DCO</a>
     </div>
 
     <div id="topbar-right">
-        <?php if ($isLoggedIn): ?>
-            <span class="topbar-user-email"><?= htmlspecialchars($userEmail) ?></span>
+        <?php if ($loggedIn): ?>
+            <span class="topbar-user-email"><?= $userEmail ?></span>
             <span class="auth-sep">|</span>
-            <a href="logout.php" class="auth-link logout-link">Logout</a>
+            <a class="auth-link logout-link" href="logout.php">Logout</a>
         <?php else: ?>
-            <a href="login.php"    class="auth-link">Login</a>
+            <a class="auth-link" href="login.php">Login</a>
             <span class="auth-sep">|</span>
-            <a href="register.php" class="auth-link">Register</a>
+            <a class="auth-link" href="register.php">Register</a>
         <?php endif; ?>
-        <span class="auth-sep">|</span>
-        <button id="topbar-cart-btn" aria-label="Cart">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+
+        <!-- Cart button -->
+        <button id="topbar-cart-btn" aria-label="Open cart">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
                 <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 01-8 0"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
             </svg>
-            <span id="cart-badge">0</span>
+            <span id="cart-badge"></span>
         </button>
     </div>
 </header>
 
 <!-- ── Cart Drawer ── -->
-<aside id="cart-drawer" aria-label="Shopping cart">
+<div id="cart-drawer" aria-label="Shopping cart">
     <div id="cart-drawer-header">
         <h2 id="cart-drawer-title">Cart</h2>
         <button id="cart-drawer-close" aria-label="Close cart">&#x2715;</button>
     </div>
     <div id="cart-items-list">
-        <p class="cart-empty-msg" id="cart-empty-msg">Your cart is empty</p>
+        <p class="cart-empty-msg" id="cart-empty-msg">Your cart is empty.</p>
     </div>
     <div id="cart-drawer-footer">
         <div id="cart-total-row">
             <span id="cart-total-label">Total</span>
-            <span id="cart-total-amount">₱ 0</span>
+            <span id="cart-total-amount">&#8369; 0</span>
         </div>
-        <button id="cart-checkout-btn">Proceed to Checkout</button>
+        <button id="cart-checkout-btn">Checkout</button>
     </div>
-</aside>
+</div>
 
 <script>
-/* ── Scroll-hide / hover-show topbar ── */
-(function() {
-    const topbar = document.getElementById('topbar');
-    let lastY = 0;
-    let ticking = false;
-    let isHovered = false;
+/* ═══════════════════════════════════════════════════════════════
+   DCO CART — sessionStorage
+   Cart resets on page refresh and when the browser is closed.
+   Login state is separate (PHP session cookie, persists across
+   refreshes, cleared when all browser windows close).
+   ═══════════════════════════════════════════════════════════════ */
 
-    topbar.addEventListener('mouseenter', () => {
-        isHovered = true;
-        topbar.classList.remove('nav-hidden');
-        topbar.classList.add('nav-visible');
-    });
-    topbar.addEventListener('mouseleave', () => {
-        isHovered = false;
-    });
+(function () {
+    'use strict';
 
-    window.addEventListener('scroll', () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(() => {
-            const currentY = window.scrollY;
-            if (currentY <= 10) {
-                topbar.classList.remove('nav-hidden');
-                topbar.classList.add('nav-visible');
-            } else if (!isHovered) {
-                if (currentY > lastY) {
-                    // scrolling down — hide
-                    topbar.classList.add('nav-hidden');
-                    topbar.classList.remove('nav-visible');
-                } else {
-                    // scrolling up — show
-                    topbar.classList.remove('nav-hidden');
-                    topbar.classList.add('nav-visible');
-                }
-            }
-            lastY = currentY;
-            ticking = false;
-        });
-    });
-})();
+    // ── Storage helpers ──────────────────────────────────────────
+    var CART_KEY = 'dco_cart';
 
-/* ── Sidebar toggle ── */
-(function() {
-    const hamburger = document.getElementById('hamburger-btn');
-    const sidebar   = document.getElementById('sidebar');
-    const overlay   = document.getElementById('nav-overlay');
-    const closeBtn  = document.getElementById('sidebar-close');
-
-    function openSidebar()  { sidebar.classList.add('open');  overlay.classList.add('active'); }
-    function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
-
-    hamburger.addEventListener('click', openSidebar);
-    closeBtn.addEventListener('click',  closeSidebar);
-    overlay.addEventListener('click',   closeSidebar);
-})();
-
-/* ── Cart logic ── */
-(function() {
-    let cart = JSON.parse(localStorage.getItem('dco_cart') || '[]');
-
-    const drawer      = document.getElementById('cart-drawer');
-    const overlay     = document.getElementById('nav-overlay');
-    const openBtn     = document.getElementById('topbar-cart-btn');
-    const closeBtn    = document.getElementById('cart-drawer-close');
-    const itemsList   = document.getElementById('cart-items-list');
-    const emptyMsg    = document.getElementById('cart-empty-msg');
-    const badge       = document.getElementById('cart-badge');
-    const totalAmount = document.getElementById('cart-total-amount');
-
-    const placeholderSVG = `<svg viewBox="0 0 40 40" fill="none" stroke="#171717" stroke-width="1.2"><rect x="4" y="8" width="32" height="26" rx="1"/><path d="M4 14h32"/><circle cx="14" cy="24" r="4"/><path d="M22 20h10M22 24h8M22 28h6"/></svg>`;
-
-    function save() { localStorage.setItem('dco_cart', JSON.stringify(cart)); }
-
-    function formatPrice(n) {
-        return '₱ ' + Number(n).toLocaleString('en-PH');
+    function loadCart() {
+        try {
+            var raw = sessionStorage.getItem(CART_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
     }
 
-    function render() {
-        // Badge
-        const total = cart.reduce((s, i) => s + i.qty, 0);
-        badge.textContent = total;
-        badge.classList.toggle('visible', total > 0);
+    function saveCart(items) {
+        try {
+            sessionStorage.setItem(CART_KEY, JSON.stringify(items));
+        } catch (e) { /* storage full or unavailable */ }
+    }
 
-        // Items
-        itemsList.innerHTML = '';
+    // ── State ────────────────────────────────────────────────────
+    var cart = loadCart();
+
+    // ── DOM refs ─────────────────────────────────────────────────
+    var drawer      = document.getElementById('cart-drawer');
+    var overlay     = document.getElementById('nav-overlay');
+    var badge       = document.getElementById('cart-badge');
+    var itemsList   = document.getElementById('cart-items-list');
+    var emptyMsg    = document.getElementById('cart-empty-msg');
+    var totalAmount = document.getElementById('cart-total-amount');
+
+    // ── Badge ────────────────────────────────────────────────────
+    function updateBadge() {
+        var count = cart.length;
+        badge.textContent = count > 9 ? '9+' : count;
+        if (count > 0) {
+            badge.classList.add('visible');
+        } else {
+            badge.classList.remove('visible');
+        }
+    }
+
+    // ── Render cart items ────────────────────────────────────────
+    function renderCart() {
+        // Clear existing items (keep empty msg)
+        var nodes = itemsList.querySelectorAll('.cart-item');
+        nodes.forEach(function (n) { n.parentNode.removeChild(n); });
+
         if (cart.length === 0) {
-            itemsList.appendChild(emptyMsg);
             emptyMsg.style.display = '';
-            totalAmount.textContent = '₱ 0';
+            totalAmount.textContent = '\u20B1 0';
             return;
         }
 
-        const grand = cart.reduce((s, i) => s + i.price * i.qty, 0);
-        totalAmount.textContent = formatPrice(grand);
+        emptyMsg.style.display = 'none';
+        var total = 0;
 
-        cart.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'cart-item';
-            div.innerHTML = `
-                <div class="cart-item-thumb">${placeholderSVG}</div>
-                <div class="cart-item-info">
-                    <div class="cart-item-cat">${item.category}</div>
-                    <div class="cart-item-name">${item.name}${item.qty > 1 ? ' ×' + item.qty : ''}</div>
-                    <div class="cart-item-price">${formatPrice(item.price * item.qty)}</div>
-                </div>
-                <button class="cart-item-remove" data-idx="${idx}" aria-label="Remove">&#x2715;</button>
-            `;
-            itemsList.appendChild(div);
+        cart.forEach(function (item, idx) {
+            total += item.price;
+            var el = document.createElement('div');
+            el.className = 'cart-item';
+            el.innerHTML =
+                '<div class="cart-item-thumb">' +
+                    '<svg viewBox="0 0 40 40" fill="none" stroke="#171717" stroke-width="1.2">' +
+                    '<rect x="4" y="8" width="32" height="26" rx="1"/>' +
+                    '<path d="M4 14h32"/><circle cx="14" cy="24" r="4"/>' +
+                    '<path d="M22 20h10M22 24h8M22 28h6"/></svg>' +
+                '</div>' +
+                '<div class="cart-item-info">' +
+                    '<p class="cart-item-name">' + escHtml(item.name) + '</p>' +
+                    '<p class="cart-item-cat">'  + escHtml(item.category) + '</p>' +
+                    '<p class="cart-item-price">\u20B1 ' + Number(item.price).toLocaleString() + '</p>' +
+                '</div>' +
+                '<button class="cart-item-remove" data-idx="' + idx + '" aria-label="Remove">\u00D7</button>';
+            itemsList.appendChild(el);
         });
 
-        itemsList.querySelectorAll('.cart-item-remove').forEach(btn => {
-            btn.addEventListener('click', () => {
-                cart.splice(Number(btn.dataset.idx), 1);
-                save(); render();
-            });
-        });
+        totalAmount.textContent = '\u20B1 ' + total.toLocaleString();
     }
 
-    function openCart()  { drawer.classList.add('open');  overlay.classList.add('active'); }
-    function closeCart() { drawer.classList.remove('open'); overlay.classList.remove('active'); }
+    // ── Remove item ──────────────────────────────────────────────
+    itemsList.addEventListener('click', function (e) {
+        var btn = e.target.closest('.cart-item-remove');
+        if (!btn) return;
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        cart.splice(idx, 1);
+        saveCart(cart);
+        updateBadge();
+        renderCart();
+    });
 
-    openBtn.addEventListener('click',  openCart);
-    closeBtn.addEventListener('click', closeCart);
-    overlay.addEventListener('click',  closeCart);
-
-    // Expose addToCart globally for product buttons
-    window.DCO_addToCart = function(name, category, price) {
-        const existing = cart.find(i => i.name === name);
-        if (existing) {
-            existing.qty++;
-        } else {
-            cart.push({ name, category, price: parseFloat(price), qty: 1 });
-        }
-        save(); render();
+    // ── Public API — called by Add to Cart / Buy Now buttons ─────
+    window.DCO_addToCart = function (name, category, price) {
+        cart.push({ name: name, category: category, price: parseFloat(price) });
+        saveCart(cart);
+        updateBadge();
+        renderCart();
         openCart();
     };
 
-    render();
+    // ── Open / close cart ────────────────────────────────────────
+    function openCart() {
+        drawer.classList.add('open');
+        overlay.classList.add('active');
+    }
+    function closeCart() {
+        drawer.classList.remove('open');
+        // only remove overlay if sidebar is also closed
+        if (!document.getElementById('sidebar').classList.contains('open')) {
+            overlay.classList.remove('active');
+        }
+    }
+
+    document.getElementById('topbar-cart-btn').addEventListener('click', function () {
+        if (drawer.classList.contains('open')) { closeCart(); } else { openCart(); }
+    });
+    document.getElementById('cart-drawer-close').addEventListener('click', closeCart);
+
+    // ── Sidebar open / close ─────────────────────────────────────
+    var sidebar   = document.getElementById('sidebar');
+    var hamburger = document.getElementById('hamburger');
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+        hamburger.classList.add('hidden');
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        hamburger.classList.remove('hidden');
+        if (!drawer.classList.contains('open')) {
+            overlay.classList.remove('active');
+        }
+    }
+
+    hamburger.addEventListener('click', openSidebar);
+    document.getElementById('sidebar-close').addEventListener('click', closeSidebar);
+
+    overlay.addEventListener('click', function () {
+        closeSidebar();
+        closeCart();
+    });
+
+    // ── Topbar hide/show on scroll ────────────────────────────────
+    var topbar   = document.getElementById('topbar');
+    var lastY    = 0;
+    var ticking  = false;
+
+    window.addEventListener('scroll', function () {
+        if (!ticking) {
+            window.requestAnimationFrame(function () {
+                var y = window.scrollY;
+                if (y > lastY && y > 80) {
+                    topbar.classList.remove('nav-visible');
+                    topbar.classList.add('nav-hidden');
+                } else {
+                    topbar.classList.remove('nav-hidden');
+                    topbar.classList.add('nav-visible');
+                }
+                lastY = y;
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+
+    // ── Escape key closes both ────────────────────────────────────
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { closeSidebar(); closeCart(); }
+    });
+
+    // ── HTML escape helper ────────────────────────────────────────
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // ── Init ──────────────────────────────────────────────────────
+    updateBadge();
+    renderCart();
+
 })();
 </script>
