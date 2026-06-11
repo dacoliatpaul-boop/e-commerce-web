@@ -15,5 +15,21 @@ if (ini_get('session.use_cookies')) {
 
 session_destroy();
 
-header('Location: index.php');
-exit;
+// Don't redirect with PHP header() — instead render a tiny page that
+// clears sessionStorage (cart) in the browser first, then redirects.
+// This guarantees the cart is wiped on the client side before landing
+// on the homepage.
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Logging out…</title>
+</head>
+<body>
+<script>
+    sessionStorage.removeItem('dco_cart');
+    window.location.replace('index.php');
+</script>
+</body>
+</html>
