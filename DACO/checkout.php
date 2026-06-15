@@ -1,10 +1,5 @@
 <?php
-/**
- * checkout.php
- * Shows the cart summary and places the order when the user confirms.
- */
-
-require_once 'config/app.php';   // $pdo + session
+require_once 'config/app.php';   
 include 'includes/nav.php';
 
 // Must be logged in

@@ -1,17 +1,5 @@
 <?php
-/**
- * cart.php — JSON API for cart operations
- *
- * POST actions:
- *   add      → add or increment a product in the cart
- *   remove   → remove one product from the cart
- *   clear    → empty the whole cart
- *
- * GET actions:
- *   view     → return all cart items for the logged-in user
- */
-
-require_once 'config/app.php';   // $pdo + session
+require_once 'config/app.php';  
 
 header('Content-Type: application/json');
 

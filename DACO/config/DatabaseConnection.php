@@ -1,6 +1,5 @@
 <?php
-// config/DatabaseConnection.php — OOP mysqli wrapper
-// Constants (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME) are defined in config/app.php.
+
 
 class DatabaseConnection
 {
