@@ -29,8 +29,8 @@
 
         <div class="footer-col">
             <span class="footer-col-title">Get in Touch</span>
-            <a href="mailto:hello@dco.com">hello@dco.com</a>
-            <a href="tel:+639170000000">+63 917 000 0000</a>
+            <a href="mailto:hello@dco.com">dco@gmail.com</a>
+            <a href="tel:+639170000000">+63 9692899764</a>
             <span class="footer-text">Calamba, Laguna, PH</span>
         </div>
 
