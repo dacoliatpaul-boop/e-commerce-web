@@ -91,6 +91,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product'])) {
 }
 
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_message'])) {
+    $messageId = (int) $_POST['message_id'];
+    if ($messageId) {
+        $pdo->prepare('DELETE FROM contact_messages WHERE id = ?')->execute([$messageId]);
+    }
+    header('Location: admin.php?tab=messages&deleted_message=' . $messageId);
+    exit;
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
     $formData['id']       = (int) ($_POST['product_id'] ?? 0);
     $formData['name']     = trim($_POST['name'] ?? '');
@@ -214,6 +224,13 @@ $cartSummary = $pdo->query('
     JOIN users u ON u.id = ci.user_id
     GROUP BY ci.user_id
     ORDER BY qty DESC
+')->fetchAll();
+
+
+$messages = $pdo->query('
+    SELECT id, name, email, subject, message, created_at
+    FROM contact_messages
+    ORDER BY created_at DESC
 ')->fetchAll();
 
 $activeTab = $_GET['tab'] ?? 'overview';
@@ -682,6 +699,13 @@ $configWarning     = isset($_GET['config_warning']);
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h2l2 8h6l2-5H5"/><circle cx="7" cy="13" r="1"/><circle cx="12" cy="13" r="1"/></svg>
                 Active Carts
             </a>
+            <a class="admin-nav-link <?= $activeTab === 'messages'  ? 'active' : '' ?>" href="?tab=messages">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v9H7l-3 2.5V12H2z"/></svg>
+                Messages
+                <?php if (count($messages) > 0): ?>
+                    <span style="margin-left:auto;background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:2px 6px;border-radius:2px;"><?= count($messages) ?></span>
+                <?php endif; ?>
+            </a>
         </nav>
     </aside>
 
@@ -1065,6 +1089,45 @@ $configWarning     = isset($_GET['config_warning']);
                         <td style="font-weight:500;"><?= htmlspecialchars($c['email']) ?></td>
                         <td><?= $c['items'] ?></td>
                         <td><?= $c['qty'] ?></td>
+                    </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ══ MESSAGES ══════════════════════════════════════════════════ -->
+        <div class="tab-panel <?= $activeTab === 'messages' ? 'active' : '' ?>">
+            <h1 class="page-heading">Messages</h1>
+            <p class="page-sub"><?= count($messages) ?> messages from the contact form</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Subject</th>
+                        <th>Message</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($messages)): ?>
+                    <tr class="empty-row"><td colspan="6">No messages yet.</td></tr>
+                    <?php else: foreach ($messages as $m): ?>
+                    <tr>
+                        <td style="color:var(--mid);white-space:nowrap;"><?= date('M j, Y', strtotime($m['created_at'])) ?></td>
+                        <td style="font-weight:500;white-space:nowrap;"><?= htmlspecialchars($m['name']) ?></td>
+                        <td><a href="mailto:<?= htmlspecialchars($m['email']) ?>" style="color:var(--blue);text-decoration:none;"><?= htmlspecialchars($m['email']) ?></a></td>
+                        <td><?= htmlspecialchars($m['subject'] ?: '—') ?></td>
+                        <td style="white-space:pre-wrap;max-width:360px;"><?= htmlspecialchars($m['message']) ?></td>
+                        <td>
+                            <form method="POST" action="?tab=messages"
+                                  onsubmit="return confirm('Delete this message? This cannot be undone.');">
+                                <input type="hidden" name="message_id" value="<?= $m['id'] ?>">
+                                <button type="submit" name="delete_message" class="btn-delete">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                     <?php endforeach; endif; ?>
                 </tbody>
