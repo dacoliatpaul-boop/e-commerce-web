@@ -26,6 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             session_regenerate_id(true);
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['email']   = $user['email'];
+
+            // Wipe any leftover cart from a previous browser session —
+            // logging in again means the old session (and its cart) is over.
+            $pdo->prepare('DELETE FROM cart_items WHERE user_id = ?')->execute([$user['id']]);
+
             $adminEmails = ['dco@admin.com', 'owner@dco.com'];
             header('Location: ' . (in_array($user['email'], $adminEmails) ? 'admin.php' : 'index.php'));
             exit;

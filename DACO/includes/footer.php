@@ -17,7 +17,7 @@
             <span class="footer-col-title">Shop</span>
             <a href="index.php">Home</a>
             <a href="products.php">All Products</a>
-            <a href="products.php">New Arrivals</a>
+            <a href="index.php">New Arrivals</a> 
         </div>
 
         <div class="footer-col">

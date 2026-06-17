@@ -71,11 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
 
         <div class="contact-detail">
             <span class="contact-detail-label">Email</span>
-            <a class="contact-detail-value" href="mailto:hello@dco.com">hello@dco.com</a>
+            <a class="contact-detail-value" href="mailto:hello@dco.com">dco@gmail.com</a>
         </div>
         <div class="contact-detail">
             <span class="contact-detail-label">Phone</span>
-            <a class="contact-detail-value" href="tel:+639170000000">+63 917 000 0000</a>
+            <a class="contact-detail-value" href="tel:+639170000000">+63 9692899764</a>
         </div>
         <div class="contact-detail">
             <span class="contact-detail-label">Location</span>

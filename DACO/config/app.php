@@ -1,6 +1,21 @@
 <?php
 // config/app.php — PDO connection, included by login.php and register.php
 
+// ── Session cookie: tied to the browser process, not a fixed expiry ────────
+// lifetime = 0 means the cookie has NO expiry date set, so the browser
+// deletes it the moment the browser itself is fully closed (not on a
+// page refresh/reload — only when the process actually quits). Once that
+// cookie is gone, $_SESSION['user_id'] is gone too, so the user appears
+// logged out the next time they visit.
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => '/',
+    'domain'   => '',
+    'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+
 session_start();
 
 // ── Database Configuration ──────────────────────────────────────────────────

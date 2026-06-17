@@ -1,6 +1,11 @@
 <?php
 require_once 'config/app.php';   // starts session
 
+// Clear this user's cart (it's DB-backed now, not sessionStorage — see cart.js)
+if (!empty($_SESSION['user_id'])) {
+    $pdo->prepare('DELETE FROM cart_items WHERE user_id = ?')->execute([(int) $_SESSION['user_id']]);
+}
+
 // Destroy the session completely
 $_SESSION = [];
 
@@ -14,11 +19,6 @@ if (ini_get('session.use_cookies')) {
 }
 
 session_destroy();
-
-// Don't redirect with PHP header() — instead render a tiny page that
-// clears sessionStorage (cart) in the browser first, then redirects.
-// This guarantees the cart is wiped on the client side before landing
-// on the homepage.
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,7 +28,6 @@ session_destroy();
 </head>
 <body>
 <script>
-    sessionStorage.removeItem('dco_cart');
     window.location.replace('index.php');
 </script>
 </body>
