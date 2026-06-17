@@ -23,6 +23,41 @@ if (!$adminUser || !in_array($adminUser['email'], ADMIN_EMAILS)) {
     exit;
 }
 
+// ── Rebuilds products_config.php from the `products` table so the storefront ──
+// ── (index.php / products.php) always reflects what's in the database.       ──
+function regenerateProductsConfig(PDO $pdo): bool {
+    $rows = $pdo->query('SELECT id, name, category, price, image, featured, wide FROM products ORDER BY id')->fetchAll();
+
+    $lines = [];
+    $lines[] = '<?php';
+    $lines[] = '// Auto-generated from the products database table — see admin.php.';
+    $lines[] = '// Manage products via Admin → Products instead of editing this file directly.';
+    $lines[] = '$products = [';
+
+    foreach ($rows as $r) {
+        $price    = (float) $r['price'];
+        $priceOut = (fmod($price, 1) === 0.0) ? (string) (int) $price : (string) $price;
+
+        $lines[] = '    [';
+        $lines[] = "        'id'       => " . (int) $r['id'] . ',';
+        $lines[] = "        'name'     => '" . addslashes($r['name']) . "',";
+        $lines[] = "        'category' => '" . addslashes($r['category']) . "',";
+        $lines[] = "        'price'    => " . $priceOut . ',';
+        $lines[] = "        'image'    => '" . addslashes($r['image'] ?? '') . "',";
+        $lines[] = "        'featured' => " . ($r['featured'] ? 'true' : 'false') . ',';
+        $lines[] = "        'wide'     => " . ($r['wide'] ? 'true' : 'false') . ',';
+        $lines[] = '    ],';
+    }
+
+    $lines[] = '];';
+
+    return @file_put_contents(__DIR__ . '/products_config.php', implode("\n", $lines) . "\n") !== false;
+}
+
+$errors    = [];
+$formData  = ['id' => 0, 'name' => '', 'category' => 'Clothes', 'price' => '', 'featured' => false, 'wide' => false];
+$openModal = false;
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status'])) {
     $orderId   = (int) $_POST['order_id'];
@@ -42,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product'])) {
     if ($productId) {
         try {
             $pdo->prepare('DELETE FROM products WHERE id = ?')->execute([$productId]);
+            regenerateProductsConfig($pdo);
             header('Location: admin.php?tab=products&deleted=' . $productId);
             exit;
         } catch (PDOException $e) {
@@ -52,6 +88,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product'])) {
     }
     header('Location: admin.php?tab=products');
     exit;
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
+    $formData['id']       = (int) ($_POST['product_id'] ?? 0);
+    $formData['name']     = trim($_POST['name'] ?? '');
+    $formData['category'] = trim($_POST['category'] ?? '');
+    $formData['price']    = trim($_POST['price'] ?? '');
+    $formData['featured'] = isset($_POST['featured']);
+    $formData['wide']     = isset($_POST['wide']);
+
+    $priceVal = (float) $formData['price'];
+
+    if ($formData['name'] === '')     $errors[] = 'Product name is required.';
+    if ($formData['category'] === '') $errors[] = 'Category is required.';
+    if ($priceVal <= 0)                $errors[] = 'Price must be greater than 0.';
+
+    $imagePath = null; // null = leave image unchanged
+    if (empty($errors) && !empty($_FILES['image_file']['name']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+        $allowedExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $ext        = strtolower(pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowedExt, true)) {
+            $errors[] = 'Image must be JPG, PNG, GIF, or WEBP.';
+        } else {
+            $safeName = trim(preg_replace('/[^a-z0-9]+/i', '-', strtolower($formData['name'])), '-');
+            $fileName = ($safeName ?: 'product') . '-' . time() . '.' . $ext;
+            if (move_uploaded_file($_FILES['image_file']['tmp_name'], __DIR__ . '/img/' . $fileName)) {
+                $imagePath = 'img/' . $fileName;
+            } else {
+                $errors[] = 'Could not save the uploaded image — check that the img/ folder is writable.';
+            }
+        }
+    }
+
+    if (empty($errors)) {
+        try {
+            if ($formData['id']) {
+                if ($imagePath !== null) {
+                    $pdo->prepare('UPDATE products SET name=?, category=?, price=?, image=?, featured=?, wide=? WHERE id=?')
+                        ->execute([$formData['name'], $formData['category'], $priceVal, $imagePath, (int)$formData['featured'], (int)$formData['wide'], $formData['id']]);
+                } else {
+                    $pdo->prepare('UPDATE products SET name=?, category=?, price=?, featured=?, wide=? WHERE id=?')
+                        ->execute([$formData['name'], $formData['category'], $priceVal, (int)$formData['featured'], (int)$formData['wide'], $formData['id']]);
+                }
+                $flashParam = 'product_updated=' . $formData['id'];
+            } else {
+                $stmt = $pdo->prepare('INSERT INTO products (name, category, price, image, featured, wide) VALUES (?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$formData['name'], $formData['category'], $priceVal, $imagePath ?? '', (int)$formData['featured'], (int)$formData['wide']]);
+                $flashParam = 'product_added=' . $pdo->lastInsertId();
+            }
+
+            $configOk = regenerateProductsConfig($pdo);
+            header('Location: admin.php?tab=products&' . $flashParam . ($configOk ? '' : '&config_warning=1'));
+            exit;
+        } catch (PDOException $e) {
+            $errors[] = 'Database error: ' . $e->getMessage();
+        }
+    }
+
+    if (!empty($errors)) {
+        $openModal = true;
+    }
 }
 
 
@@ -99,7 +197,7 @@ foreach ($orderItems as $oi) {
 
 
 $products = $pdo->query('
-    SELECT p.id, p.name, p.category, p.price, p.image,
+    SELECT p.id, p.name, p.category, p.price, p.image, p.featured, p.wide,
            COALESCE(SUM(oi.quantity), 0) AS units_sold,
            COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS revenue
     FROM products p
@@ -121,7 +219,10 @@ $cartSummary = $pdo->query('
 $activeTab = $_GET['tab'] ?? 'overview';
 $updatedId = isset($_GET['updated']) ? (int)$_GET['updated'] : 0;
 $deletedId = isset($_GET['deleted']) ? (int)$_GET['deleted'] : 0;
-$deleteErrorId = isset($_GET['delete_error']) ? (int)$_GET['delete_error'] : 0;
+$deleteErrorId    = isset($_GET['delete_error']) ? (int)$_GET['delete_error'] : 0;
+$productAddedId   = isset($_GET['product_added']) ? (int)$_GET['product_added'] : 0;
+$productUpdatedId = isset($_GET['product_updated']) ? (int)$_GET['product_updated'] : 0;
+$configWarning     = isset($_GET['config_warning']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -426,6 +527,80 @@ $deleteErrorId = isset($_GET['delete_error']) ? (int)$_GET['delete_error'] : 0;
         }
         .btn-delete:hover { background: #b91c1c; }
 
+        /* ── Product Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: var(--white);
+            padding: 32px;
+            max-width: 440px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-box h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            font-size: 26px;
+            margin-bottom: 22px;
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--mid);
+        }
+        .pf-row { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+        .pf-row label {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--mid);
+        }
+        .pf-row input[type="text"],
+        .pf-row input[type="number"],
+        .pf-row input[type="file"],
+        .pf-row select {
+            padding: 9px 12px;
+            border: 1px solid var(--faint);
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--white);
+            color: var(--ink);
+        }
+        .pf-checkboxes { flex-direction: row; gap: 24px; }
+        .pf-checkboxes label {
+            flex-direction: row;
+            align-items: center;
+            gap: 6px;
+            display: flex;
+            text-transform: none;
+            font-weight: 500;
+            color: var(--ink);
+            font-size: 12px;
+            letter-spacing: normal;
+        }
+        .pf-current-image { font-size: 10px; color: var(--mid); margin: 4px 0 0; }
+        .pf-error {
+            font-size: 11px;
+            color: var(--red);
+            margin-bottom: 10px;
+        }
+
         /* ── Flash ── */
         .flash-updated {
             display: inline-block;
@@ -698,8 +873,13 @@ $deleteErrorId = isset($_GET['delete_error']) ? (int)$_GET['delete_error'] : 0;
 
         <!-- ══ PRODUCTS ═════════════════════════════════════════════════ -->
         <div class="tab-panel <?= $activeTab === 'products' ? 'active' : '' ?>">
-            <h1 class="page-heading">Products</h1>
-            <p class="page-sub"><?= count($products) ?> products — sorted by units sold</p>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;">
+                <div>
+                    <h1 class="page-heading">Products</h1>
+                    <p class="page-sub"><?= count($products) ?> products — sorted by units sold</p>
+                </div>
+                <button type="button" class="btn-update" id="add-product-btn" style="padding:9px 18px;">+ Add Product</button>
+            </div>
 
             <?php if ($deletedId): ?>
                 <p style="font-size:10px;letter-spacing:.12em;color:var(--green);margin-bottom:20px;">
@@ -709,6 +889,21 @@ $deleteErrorId = isset($_GET['delete_error']) ? (int)$_GET['delete_error'] : 0;
             <?php if ($deleteErrorId): ?>
                 <p style="font-size:10px;letter-spacing:.12em;color:var(--red);margin-bottom:20px;">
                     ✕ Could not delete product #<?= $deleteErrorId ?> — it's still referenced by existing orders or carts.
+                </p>
+            <?php endif; ?>
+            <?php if ($productAddedId): ?>
+                <p style="font-size:10px;letter-spacing:.12em;color:var(--green);margin-bottom:20px;">
+                    ✓ Product #<?= $productAddedId ?> added.
+                </p>
+            <?php endif; ?>
+            <?php if ($productUpdatedId): ?>
+                <p style="font-size:10px;letter-spacing:.12em;color:var(--green);margin-bottom:20px;">
+                    ✓ Product #<?= $productUpdatedId ?> updated.
+                </p>
+            <?php endif; ?>
+            <?php if ($configWarning): ?>
+                <p style="font-size:10px;letter-spacing:.12em;color:var(--amber);margin-bottom:20px;">
+                    ⚠ Saved to the database, but products_config.php could not be rewritten automatically — check file permissions.
                 </p>
             <?php endif; ?>
 
@@ -748,16 +943,74 @@ $deleteErrorId = isset($_GET['delete_error']) ? (int)$_GET['delete_error'] : 0;
                             <div class="rev-bar-bg"><div class="rev-bar" style="width:<?= round($p['revenue'] / $totalRevAll * 100) ?>%"></div></div>
                         </td>
                         <td>
-                            <form method="POST" action="?tab=products"
-                                  onsubmit="return confirm('Delete &quot;<?= htmlspecialchars(addslashes($p['name'])) ?>&quot;? This cannot be undone.');">
-                                <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
-                                <button type="submit" name="delete_product" class="btn-delete">Delete</button>
-                            </form>
+                            <div style="display:flex;gap:6px;">
+                                <button type="button" class="btn-update btn-edit"
+                                    data-id="<?= $p['id'] ?>"
+                                    data-name="<?= htmlspecialchars($p['name'], ENT_QUOTES) ?>"
+                                    data-category="<?= htmlspecialchars($p['category'], ENT_QUOTES) ?>"
+                                    data-price="<?= htmlspecialchars($p['price'], ENT_QUOTES) ?>"
+                                    data-image="<?= htmlspecialchars($p['image'] ?? '', ENT_QUOTES) ?>"
+                                    data-featured="<?= !empty($p['featured']) ? '1' : '0' ?>"
+                                    data-wide="<?= !empty($p['wide']) ? '1' : '0' ?>">Edit</button>
+                                <form method="POST" action="?tab=products"
+                                      onsubmit="return confirm('Delete &quot;<?= htmlspecialchars(addslashes($p['name'])) ?>&quot;? This cannot be undone.');">
+                                    <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+                                    <button type="submit" name="delete_product" class="btn-delete">Delete</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; endif; ?>
                 </tbody>
             </table>
+
+            <!-- ── Add / Edit Product Modal ── -->
+            <div class="modal-overlay" id="product-modal">
+                <div class="modal-box">
+                    <button type="button" class="modal-close" id="close-product-modal">&#x2715;</button>
+                    <h2 id="product-modal-title">Add Product</h2>
+
+                    <?php foreach ($errors as $err): ?>
+                        <p class="pf-error">⚠ <?= htmlspecialchars($err) ?></p>
+                    <?php endforeach; ?>
+
+                    <form method="POST" action="?tab=products" enctype="multipart/form-data" id="product-form">
+                        <input type="hidden" name="product_id" id="pf-id" value="<?= $formData['id'] ?: '' ?>">
+
+                        <div class="pf-row">
+                            <label for="pf-name">Name</label>
+                            <input type="text" name="name" id="pf-name" value="<?= htmlspecialchars($formData['name']) ?>" required>
+                        </div>
+
+                        <div class="pf-row">
+                            <label for="pf-category">Category</label>
+                            <select name="category" id="pf-category" required>
+                                <?php foreach (['Clothes', 'Accessories', 'Devices', 'Fragrance'] as $cat): ?>
+                                    <option value="<?= $cat ?>" <?= $formData['category'] === $cat ? 'selected' : '' ?>><?= $cat ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="pf-row">
+                            <label for="pf-price">Price (₱)</label>
+                            <input type="number" name="price" id="pf-price" min="0" step="0.01" value="<?= htmlspecialchars($formData['price']) ?>" required>
+                        </div>
+
+                        <div class="pf-row">
+                            <label for="pf-image-file">Image</label>
+                            <input type="file" name="image_file" id="pf-image-file" accept="image/*">
+                            <p class="pf-current-image" id="pf-current-image"></p>
+                        </div>
+
+                        <div class="pf-row pf-checkboxes">
+                            <label><input type="checkbox" name="featured" id="pf-featured" value="1" <?= $formData['featured'] ? 'checked' : '' ?>> Featured</label>
+                            <label><input type="checkbox" name="wide" id="pf-wide" value="1" <?= $formData['wide'] ? 'checked' : '' ?>> Wide card</label>
+                        </div>
+
+                        <button type="submit" name="save_product" class="btn-update" id="pf-submit" style="width:100%;padding:11px;">Add Product</button>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <!-- ══ USERS ═════════════════════════════════════════════════════ -->
@@ -833,6 +1086,66 @@ document.querySelectorAll('.order-row').forEach(function(row) {
         arrow.textContent = isOpen ? '▾' : '▸';
     });
 });
+
+// ── Add / Edit Product Modal ──────────────────────────────────────
+(function () {
+    var modal      = document.getElementById('product-modal');
+    var form       = document.getElementById('product-form');
+    var titleEl    = document.getElementById('product-modal-title');
+    var submitBtn  = document.getElementById('pf-submit');
+    var idField    = document.getElementById('pf-id');
+    var nameField  = document.getElementById('pf-name');
+    var catField   = document.getElementById('pf-category');
+    var priceField = document.getElementById('pf-price');
+    var featField  = document.getElementById('pf-featured');
+    var wideField  = document.getElementById('pf-wide');
+    var imgInfo    = document.getElementById('pf-current-image');
+
+    function openModal()  { modal.classList.add('active'); }
+    function closeModal() { modal.classList.remove('active'); }
+
+    function showModalWithData(data) {
+        data = data || {};
+        form.reset();
+        idField.value     = data.id || '';
+        nameField.value   = data.name || '';
+        catField.value    = data.category || 'Clothes';
+        priceField.value  = data.price || '';
+        featField.checked = data.featured === '1';
+        wideField.checked = data.wide === '1';
+
+        if (data.id) {
+            titleEl.textContent   = 'Edit Product';
+            submitBtn.textContent = 'Save Changes';
+            imgInfo.textContent   = data.image ? ('Current image: ' + data.image + ' — choose a file to replace it') : 'No current image';
+        } else {
+            titleEl.textContent   = 'Add Product';
+            submitBtn.textContent = 'Add Product';
+            imgInfo.textContent   = '';
+        }
+        openModal();
+    }
+
+    document.getElementById('add-product-btn').addEventListener('click', function () {
+        showModalWithData({});
+    });
+    document.querySelectorAll('.btn-edit').forEach(function (btn) {
+        btn.addEventListener('click', function () { showModalWithData(btn.dataset); });
+    });
+    document.getElementById('close-product-modal').addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+
+    <?php if ($openModal): ?>
+    showModalWithData({
+        id:       '<?= addslashes((string)($formData['id'] ?: '')) ?>',
+        name:     '<?= addslashes($formData['name']) ?>',
+        category: '<?= addslashes($formData['category']) ?>',
+        price:    '<?= addslashes((string)$formData['price']) ?>',
+        featured: '<?= $formData['featured'] ? '1' : '0' ?>',
+        wide:     '<?= $formData['wide'] ? '1' : '0' ?>'
+    });
+    <?php endif; ?>
+})();
 </script>
 
 </body>

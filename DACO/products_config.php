@@ -1,7 +1,7 @@
 <?php
+// Auto-generated from the products database table — see admin.php.
+// Manage products via Admin → Products instead of editing this file directly.
 $products = [
-
-    // ── CLOTHES ─────────────────────────────────────────────────
     [
         'id'       => 1,
         'name'     => 'White Executive Longsleeve',
@@ -9,7 +9,7 @@ $products = [
         'price'    => 4800,
         'image'    => 'img/shirt2.png',
         'featured' => true,
-        'wide'     => true,        // big card on homepage
+        'wide'     => true,
     ],
     [
         'id'       => 2,
@@ -65,8 +65,6 @@ $products = [
         'featured' => false,
         'wide'     => false,
     ],
-
-    // ── ACCESSORIES ─────────────────────────────────────────────
     [
         'id'       => 8,
         'name'     => 'Minimal Leather Bag',
@@ -94,8 +92,6 @@ $products = [
         'featured' => false,
         'wide'     => false,
     ],
-
-    // ── DEVICES ─────────────────────────────────────────────────
     [
         'id'       => 11,
         'name'     => 'DCO Wireless Speaker',
@@ -114,8 +110,6 @@ $products = [
         'featured' => false,
         'wide'     => false,
     ],
-
-    // ── FRAGRANCE ───────────────────────────────────────────────
     [
         'id'       => 13,
         'name'     => 'Noir Santal Eau de Parfum',
@@ -134,6 +128,4 @@ $products = [
         'featured' => true,
         'wide'     => false,
     ],
-
 ];
-?>
