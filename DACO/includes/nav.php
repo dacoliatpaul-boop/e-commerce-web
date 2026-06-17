@@ -45,9 +45,10 @@ $userEmail  = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
     <div class="sidebar-footer">
         <?php if ($loggedIn): ?>
             <div style="width:100%;">
-                <div class="sidebar-user-info">
+                <a class="sidebar-user-info" href="profile.php" style="display:block;text-decoration:none;">
                     <p class="sidebar-user-email"><?= $userEmail ?></p>
-                </div>
+                </a>
+                <a class="sidebar-auth-btn" href="profile.php">My Profile</a>
                 <a class="sidebar-auth-btn logout-btn" href="logout.php">Logout</a>
             </div>
         <?php else: ?>
@@ -71,7 +72,7 @@ $userEmail  = $loggedIn ? htmlspecialchars($_SESSION['email'] ?? '') : '';
 
     <div id="topbar-right">
         <?php if ($loggedIn): ?>
-            <span class="topbar-user-email"><?= $userEmail ?></span>
+            <a class="topbar-user-email" href="profile.php"><?= $userEmail ?></a>
             <span class="auth-sep">|</span>
             <a class="auth-link logout-link" href="logout.php">Logout</a>
         <?php else: ?>
