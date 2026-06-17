@@ -229,5 +229,7 @@ document.querySelectorAll('.btn-remove-item').forEach(btn => {
 });
 </script>
 
+<?php include('includes/footer.php'); ?>
+
 </body>
 </html>
