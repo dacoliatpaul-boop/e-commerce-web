@@ -972,3 +972,259 @@ body {
     #products-header { padding: 60px 20px 36px; }
 }
 @media (max-width: 420px) { #products-grid { grid-template-columns: 1fr; } }
+
+/* ════════════════════════════════════════
+   FOOTER — Shared across all pages (includes/footer.php)
+   ════════════════════════════════════════ */
+
+.site-footer {
+    background: #171717;
+    color: #fff;
+    padding: 80px 48px 0;
+}
+
+.footer-top {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr;
+    gap: 48px;
+    padding-bottom: 56px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.footer-brand { display: flex; flex-direction: column; }
+.footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    letter-spacing: 0.06em;
+    color: #fff;
+    margin-bottom: 16px;
+    line-height: 1;
+}
+.footer-tagline {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.8;
+    max-width: 260px;
+    margin: 0;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.footer-col-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 6px;
+}
+.footer-col a,
+.footer-col .footer-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.footer-col a:hover { color: #fff; }
+.footer-col .footer-text { color: rgba(255,255,255,0.5); }
+
+.footer-bottom {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.footer-copy {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.35);
+}
+.footer-bottom-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.footer-bottom-links a {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.footer-bottom-links a:hover { color: #fff; }
+.footer-sep { color: rgba(255,255,255,0.2); font-size: 11px; }
+
+@media (max-width: 900px) {
+    .footer-top { grid-template-columns: 1fr 1fr; gap: 36px 24px; }
+    .site-footer { padding: 56px 24px 0; }
+}
+@media (max-width: 560px) {
+    .footer-top { grid-template-columns: 1fr; }
+    .footer-bottom { flex-direction: column; align-items: flex-start; }
+}
+
+
+/* ════════════════════════════════════════
+   CONTACT PAGE
+   ════════════════════════════════════════ */
+
+#contact-header {
+    padding: 72px 48px 0;
+    background: #f7f7f5;
+    text-align: center;
+}
+#contact-eyebrow {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    color: #aaa;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+#contact-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(40px, 7vw, 80px);
+    font-weight: 300;
+    color: #171717;
+    letter-spacing: 0.05em;
+    margin: 0;
+    padding-bottom: 56px;
+}
+
+#contact-section {
+    padding: 80px 48px 100px;
+    background: #ffffff;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 64px;
+}
+
+.contact-info-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: #171717;
+    margin: 0 0 20px;
+}
+.contact-info-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    line-height: 2;
+    color: #666;
+    margin-bottom: 36px;
+}
+.contact-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 24px;
+}
+.contact-detail-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #aaa;
+}
+.contact-detail-value {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    color: #171717;
+    text-decoration: none;
+}
+.contact-detail-value:hover { color: #555; }
+
+.contact-form .form {
+    margin-bottom: 18px;
+}
+.contact-form label {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 8px;
+}
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 14px 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: #171717;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+}
+.contact-form input::placeholder,
+.contact-form textarea::placeholder { color: #bbb; }
+.contact-form input:focus,
+.contact-form textarea:focus { border-color: #171717; }
+.contact-form textarea { min-height: 140px; }
+
+.btn-send {
+    display: inline-block;
+    padding: 15px 44px;
+    background: #171717;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: 1px solid #171717;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-send:hover { background: #333; }
+
+.contact-success-msg {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: #171717;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+}
+.error-msg {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: #b91c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+}
+
+@media (max-width: 800px) {
+    #contact-section { grid-template-columns: 1fr; gap: 48px; padding: 56px 24px 80px; }
+    #contact-header { padding: 56px 24px 0; }
+}
