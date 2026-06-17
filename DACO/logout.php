@@ -6,17 +6,23 @@ if (!empty($_SESSION['user_id'])) {
     $pdo->prepare('DELETE FROM cart_items WHERE user_id = ?')->execute([(int) $_SESSION['user_id']]);
 }
 
-// Destroy the session completely
-$_SESSION = [];
+// Delete login cookies by setting expiry in the past
+setcookie('user_id',  '', time() - 3600, '/', '', false, true);
+setcookie('username', '', time() - 3600, '/', '', false, true);
 
-if (ini_get('session.use_cookies')) {
+// Also destroy session (used by shopping cart)
+$_SESSION = [];
+session_destroy();
+
+if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(
-        session_name(), '', time() - 0,
-        $params['path'], $params['domain'],
-        $params['secure'], $params['httponly']
+        session_name(), '', time() - 42000,
+        $params["path"], $params["domain"],
+        $params["secure"], $params["httponly"]
     );
 }
+
 
 session_destroy();
 ?>
