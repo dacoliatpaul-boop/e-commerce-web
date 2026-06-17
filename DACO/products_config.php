@@ -128,4 +128,13 @@ $products = [
         'featured' => true,
         'wide'     => false,
     ],
+    [
+        'id'       => 16,
+        'name'     => 'Venom Wave (5090)',
+        'category' => 'Devices',
+        'price'    => 120000,
+        'image'    => 'img/venom-wave-5090-1781672757.jpg',
+        'featured' => true,
+        'wide'     => false,
+    ],
 ];
