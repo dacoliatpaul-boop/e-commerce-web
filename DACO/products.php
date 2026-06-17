@@ -124,5 +124,7 @@ if (!isset($products)) { $products = []; }
     search.addEventListener('input', applyFilters);
 </script>
 
+<?php include('includes/footer.php'); ?>
+
 </body>
 </html>
