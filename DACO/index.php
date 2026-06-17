@@ -118,5 +118,7 @@ $featured = array_filter($products, function($p) { return !empty($p['featured'])
     </div>
 </section>
 
+<?php include('includes/footer.php'); ?>
+
 </body>
 </html>
