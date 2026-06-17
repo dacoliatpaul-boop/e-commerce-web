@@ -1,22 +1,15 @@
 <?php
-/**
- * admin.php — DCO Admin Dashboard
- * Place this in the project root alongside index.php, products.php, etc.
- *
- * ACCESS CONTROL: Change this to your own email or add a proper role system.
- */
 
 require_once 'config/app.php';   // $pdo + session
 
-// ── Simple admin gate — only allow specific emails ─────────────────────────
-define('ADMIN_EMAILS', ['dco@admin.com', 'owner@dco.com']); // ← change these
+
+define('ADMIN_EMAILS', ['dco@admin.com', 'owner@dco.com']); 
 
 if (empty($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
 
-// Check if logged-in user is an admin
 $adminCheck = $pdo->prepare('SELECT email FROM users WHERE id = ?');
 $adminCheck->execute([$_SESSION['user_id']]);
 $adminUser = $adminCheck->fetch();
@@ -30,7 +23,7 @@ if (!$adminUser || !in_array($adminUser['email'], ADMIN_EMAILS)) {
     exit;
 }
 
-// ── Handle order status update ─────────────────────────────────────────────
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status'])) {
     $orderId   = (int) $_POST['order_id'];
     $newStatus = $_POST['status'] ?? '';
@@ -43,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
     exit;
 }
 
-// ── Fetch stats ────────────────────────────────────────────────────────────
+
 $stats = [];
 
 $stats['total_users']   = $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
@@ -51,7 +44,7 @@ $stats['total_orders']  = $pdo->query('SELECT COUNT(*) FROM orders')->fetchColum
 $stats['total_revenue'] = $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM orders WHERE status != 'cancelled'")->fetchColumn();
 $stats['pending_orders']= $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'pending'")->fetchColumn();
 
-// ── Fetch users ────────────────────────────────────────────────────────────
+
 $users = $pdo->query('
     SELECT u.id, u.email, u.created_at,
            COUNT(DISTINCT o.id)               AS order_count,
@@ -62,7 +55,7 @@ $users = $pdo->query('
     ORDER BY u.created_at DESC
 ')->fetchAll();
 
-// ── Fetch orders ───────────────────────────────────────────────────────────
+
 $orders = $pdo->query('
     SELECT o.id, o.total_amount, o.status, o.created_at,
            u.email
@@ -71,7 +64,7 @@ $orders = $pdo->query('
     ORDER BY o.created_at DESC
 ')->fetchAll();
 
-// ── Fetch order items (for expanded view) ─────────────────────────────────
+
 $orderItems = $pdo->query('
     SELECT oi.order_id, oi.quantity, oi.unit_price,
            p.name, p.category, p.image
@@ -80,13 +73,13 @@ $orderItems = $pdo->query('
     ORDER BY oi.order_id DESC
 ')->fetchAll();
 
-// Group order items by order_id
+
 $itemsByOrder = [];
 foreach ($orderItems as $oi) {
     $itemsByOrder[$oi['order_id']][] = $oi;
 }
 
-// ── Fetch products ─────────────────────────────────────────────────────────
+
 $products = $pdo->query('
     SELECT p.id, p.name, p.category, p.price, p.image,
            COALESCE(SUM(oi.quantity), 0) AS units_sold,
@@ -98,7 +91,7 @@ $products = $pdo->query('
     ORDER BY units_sold DESC
 ')->fetchAll();
 
-// ── Active cart items (unpurchased) ───────────────────────────────────────
+
 $cartSummary = $pdo->query('
     SELECT u.email, COUNT(*) AS items, SUM(ci.quantity) AS qty
     FROM cart_items ci
@@ -442,7 +435,7 @@ $updatedId = isset($_GET['updated']) ? (int)$_GET['updated'] : 0;
 </head>
 <body>
 
-<!-- ── Admin Topbar ── -->
+
 <header class="admin-topbar">
     <a class="admin-logo" href="admin.php">DCO</a>
     <span class="admin-topbar-label">Admin</span>
@@ -452,7 +445,7 @@ $updatedId = isset($_GET['updated']) ? (int)$_GET['updated'] : 0;
 
 <div class="admin-shell">
 
-    <!-- ── Sidebar ── -->
+    
     <aside class="admin-sidebar">
         <div class="sidebar-section-label">Dashboard</div>
         <nav>
