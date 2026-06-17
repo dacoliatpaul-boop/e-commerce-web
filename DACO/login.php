@@ -4,7 +4,8 @@ require_once 'config/app.php';
 $errors = [];
 
 if (!empty($_SESSION['user_id'])) {
-    header('Location: index.php');
+    $adminEmails = ['dco@admin.com', 'owner@dco.com'];
+    header('Location: ' . (in_array($_SESSION['email'] ?? '', $adminEmails) ? 'admin.php' : 'index.php'));
     exit;
 }
 
@@ -25,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             session_regenerate_id(true);
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['email']   = $user['email'];
-            header('Location: index.php');
+            $adminEmails = ['dco@admin.com', 'owner@dco.com'];
+            header('Location: ' . (in_array($user['email'], $adminEmails) ? 'admin.php' : 'index.php'));
             exit;
         } else {
             $errors[] = 'Incorrect email or password.';

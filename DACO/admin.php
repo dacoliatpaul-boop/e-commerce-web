@@ -37,6 +37,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
 }
 
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product'])) {
+    $productId = (int) $_POST['product_id'];
+    if ($productId) {
+        try {
+            $pdo->prepare('DELETE FROM products WHERE id = ?')->execute([$productId]);
+            header('Location: admin.php?tab=products&deleted=' . $productId);
+            exit;
+        } catch (PDOException $e) {
+            // Likely a foreign key constraint (product still referenced by orders/cart)
+            header('Location: admin.php?tab=products&delete_error=' . $productId);
+            exit;
+        }
+    }
+    header('Location: admin.php?tab=products');
+    exit;
+}
+
+
 $stats = [];
 
 $stats['total_users']   = $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
@@ -102,6 +120,8 @@ $cartSummary = $pdo->query('
 
 $activeTab = $_GET['tab'] ?? 'overview';
 $updatedId = isset($_GET['updated']) ? (int)$_GET['updated'] : 0;
+$deletedId = isset($_GET['deleted']) ? (int)$_GET['deleted'] : 0;
+$deleteErrorId = isset($_GET['delete_error']) ? (int)$_GET['delete_error'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -391,6 +411,21 @@ $updatedId = isset($_GET['updated']) ? (int)$_GET['updated'] : 0;
         }
         .btn-update:hover { background: #333; }
 
+        .btn-delete {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            background: var(--red);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-delete:hover { background: #b91c1c; }
+
         /* ── Flash ── */
         .flash-updated {
             display: inline-block;
@@ -666,6 +701,17 @@ $updatedId = isset($_GET['updated']) ? (int)$_GET['updated'] : 0;
             <h1 class="page-heading">Products</h1>
             <p class="page-sub"><?= count($products) ?> products — sorted by units sold</p>
 
+            <?php if ($deletedId): ?>
+                <p style="font-size:10px;letter-spacing:.12em;color:var(--green);margin-bottom:20px;">
+                    ✓ Product #<?= $deletedId ?> deleted.
+                </p>
+            <?php endif; ?>
+            <?php if ($deleteErrorId): ?>
+                <p style="font-size:10px;letter-spacing:.12em;color:var(--red);margin-bottom:20px;">
+                    ✕ Could not delete product #<?= $deleteErrorId ?> — it's still referenced by existing orders or carts.
+                </p>
+            <?php endif; ?>
+
             <?php
             $totalRevAll = max(1, max(array_column($products ?: [['revenue'=>1]], 'revenue')));
             ?>
@@ -678,11 +724,12 @@ $updatedId = isset($_GET['updated']) ? (int)$_GET['updated'] : 0;
                         <th>Price</th>
                         <th>Units Sold</th>
                         <th>Revenue</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($products)): ?>
-                    <tr class="empty-row"><td colspan="6">No products in database.</td></tr>
+                    <tr class="empty-row"><td colspan="7">No products in database.</td></tr>
                     <?php else: foreach ($products as $p): ?>
                     <tr>
                         <td>
@@ -699,6 +746,13 @@ $updatedId = isset($_GET['updated']) ? (int)$_GET['updated'] : 0;
                         <td>
                             ₱<?= number_format($p['revenue']) ?>
                             <div class="rev-bar-bg"><div class="rev-bar" style="width:<?= round($p['revenue'] / $totalRevAll * 100) ?>%"></div></div>
+                        </td>
+                        <td>
+                            <form method="POST" action="?tab=products"
+                                  onsubmit="return confirm('Delete &quot;<?= htmlspecialchars(addslashes($p['name'])) ?>&quot;? This cannot be undone.');">
+                                <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+                                <button type="submit" name="delete_product" class="btn-delete">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     <?php endforeach; endif; ?>
