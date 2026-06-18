@@ -1,9 +1,11 @@
 body {
     background-color: #ffffff;
     margin: 0;
+    overflow-x: hidden;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+img, svg { max-width: 100%; height: auto; }
 
 /* ── Topbar hide/show on scroll ── */
 .topbar {
@@ -447,6 +449,24 @@ body {
 }
 #cart-checkout-btn:hover { background: #333; }
 
+/* ── Topbar / sidebar / cart drawer — mobile ── */
+@media (max-width: 640px) {
+    .topbar { padding: 0 16px; }
+    .topbar-logo { font-size: 30px; }
+    .topbar-user-email,
+    .topbar-user-email + .auth-sep { display: none; }
+}
+@media (max-width: 420px) {
+    .sidebar { width: 85vw; max-width: 280px; }
+    #cart-drawer { width: 90vw; max-width: 360px; }
+}
+@media (max-width: 380px) {
+    #topbar-right { gap: 6px; }
+    .auth-link { font-size: 11px; }
+    .topbar-logo { font-size: 26px; }
+    .sidebar, #cart-drawer { padding: 20px; }
+}
+
 
 /* ════════════════════════════════════════
    SHARED — Product card (index + products)
@@ -546,6 +566,9 @@ body {
     background: #f7f7f5;
     position: relative;
     overflow: hidden;
+}
+@media (max-width: 480px) {
+    #hero { min-height: 80vh; padding: 60px 20px 48px; }
 }
 #hero::before {
     content: 'DCO';
@@ -794,13 +817,18 @@ body {
     #showcase-grid { grid-template-columns: repeat(2, 1fr); }
     .product-card.wide { grid-column: span 2; }
     #categories-grid { grid-template-columns: repeat(2, 1fr); }
-    #showcase-section, #categories-section { padding: 60px 24px; }
+    #showcase-section, #categories-section, #banner-strip { padding: 60px 24px; }
 }
 @media (max-width: 560px) {
     #showcase-grid { grid-template-columns: 1fr; }
     .product-card.wide { grid-column: span 1; }
     .product-card.wide .product-img-wrap { padding-bottom: 100%; }
     #categories-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 380px) {
+    #showcase-grid { gap: 16px; }
+    #categories-grid { gap: 10px; }
+    .cat-card { padding: 28px 14px 24px; min-height: 160px; }
 }
 
 
@@ -972,6 +1000,11 @@ body {
     #products-header { padding: 60px 20px 36px; }
 }
 @media (max-width: 420px) { #products-grid { grid-template-columns: 1fr; } }
+@media (max-width: 480px) {
+    #filter-bar { padding: 16px 16px; gap: 10px; }
+    #search-input { padding: 13px 18px; font-size: 11px; }
+    #products-grid { gap: 28px 16px; }
+}
 
 /* ════════════════════════════════════════
    FOOTER — Shared across all pages (includes/footer.php)
@@ -1078,6 +1111,10 @@ body {
 @media (max-width: 560px) {
     .footer-top { grid-template-columns: 1fr; }
     .footer-bottom { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 380px) {
+    .footer-top { gap: 28px; }
+    .footer-logo { font-size: 30px; }
 }
 
 
@@ -1227,4 +1264,8 @@ body {
 @media (max-width: 800px) {
     #contact-section { grid-template-columns: 1fr; gap: 48px; padding: 56px 24px 80px; }
     #contact-header { padding: 56px 24px 0; }
+}
+@media (max-width: 480px) {
+    #contact-section { padding: 48px 18px 64px; gap: 36px; }
+    #contact-title { padding-bottom: 40px; }
 }

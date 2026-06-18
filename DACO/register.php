@@ -1,5 +1,5 @@
 <?php
-require_once 'config/app.php';   // starts session, defines $pdo
+require_once 'config/app.php';   
 
 $errors = [];
 

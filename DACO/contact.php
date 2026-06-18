@@ -22,12 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
     }
 
     if (empty($errors)) {
-        // Store the message in the database.
-        // Requires a `contact_messages` table:
-        //   id INT PK AUTO_INCREMENT,
-        //   name VARCHAR(255), email VARCHAR(255),
-        //   subject VARCHAR(255), message TEXT,
-        //   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         try {
             $stmt = $pdo->prepare('
                 INSERT INTO contact_messages (name, email, subject, message)

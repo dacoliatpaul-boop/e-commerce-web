@@ -61,6 +61,11 @@ body {
     border-color: #1a1a1a;
 }
 
+@media (max-width: 700px) {
+    .page-wrapper { flex-direction: column; align-items: center; gap: 16px; }
+    .btn-back { position: static; align-self: flex-start; }
+}
+
 /* ── Card ── */
 .login-page {
     width: 100%;

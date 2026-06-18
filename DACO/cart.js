@@ -1,18 +1,14 @@
-/**
- * js/cart.js
- * Replaces the old sessionStorage-based DCO_addToCart.
- * Include this in nav.php (or in every page's <head>).
- */
+
 
 /**
- * Add a product to the server-side cart.
- * Falls back to redirecting to login if the user isn't logged in.
+ * 
  *
- * @param {string} name       - product name (used only for toast)
- * @param {string} category   - product category (used only for toast)
- * @param {number} price      - product price (used only for toast)
- * @param {number} productId  - the products.id from the DB
- * @param {number} [qty=1]    - quantity to add
+ *
+ * @param {string} name       
+ * @param {string} category   
+ * @param {number} price      
+ * @param {number} productId S
+ * @param {number} [qty=1]   
  */
 async function DCO_addToCart(name, category, price, productId, qty = 1) {
     if (!productId) {
