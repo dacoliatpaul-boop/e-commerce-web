@@ -23,6 +23,15 @@ if (!$adminUser || !in_array($adminUser['email'], ADMIN_EMAILS)) {
     exit;
 }
 
+function paymentMethodLabel($method) {
+    $map = [
+        'bank_transfer' => 'Bank Transfer',
+        'cod'           => 'Cash on Delivery',
+        'gcash'         => 'GCash',
+    ];
+    return $map[$method] ?? ($method ? ucfirst(str_replace('_', ' ', $method)) : 'N/A');
+}
+
 // ── Rebuilds products_config.php from the `products` table so the storefront ──
 // ── (index.php / products.php) always reflects what's in the database.       ──
 function regenerateProductsConfig(PDO $pdo): bool {
@@ -184,6 +193,7 @@ $users = $pdo->query('
 
 $orders = $pdo->query('
     SELECT o.id, o.total_amount, o.status, o.created_at,
+           o.shipping_address, o.payment_method,
            u.email
     FROM orders o
     JOIN users u ON u.id = o.user_id
@@ -827,6 +837,8 @@ $configWarning     = isset($_GET['config_warning']);
                         <th>#</th>
                         <th>Customer</th>
                         <th>Items</th>
+                        <th>Address</th>
+                        <th>Payment</th>
                         <th>Total</th>
                         <th>Status</th>
                         <th>Date</th>
@@ -835,7 +847,7 @@ $configWarning     = isset($_GET['config_warning']);
                 </thead>
                 <tbody>
                     <?php if (empty($orders)): ?>
-                    <tr class="empty-row"><td colspan="8">No orders yet.</td></tr>
+                    <tr class="empty-row"><td colspan="10">No orders yet.</td></tr>
                     <?php else: foreach ($orders as $o):
                         $itsItems = $itemsByOrder[$o['id']] ?? [];
                     ?>
@@ -844,6 +856,10 @@ $configWarning     = isset($_GET['config_warning']);
                         <td style="font-weight:600;">#<?= $o['id'] ?></td>
                         <td><?= htmlspecialchars($o['email']) ?></td>
                         <td style="color:var(--mid);"><?= count($itsItems) ?> item<?= count($itsItems) !== 1 ? 's' : '' ?></td>
+                        <td style="color:var(--mid);max-width:220px;white-space:normal;font-size:11px;line-height:1.4;">
+                            <?= $o['shipping_address'] ? nl2br(htmlspecialchars($o['shipping_address'])) : '<span style="color:#ccc;">—</span>' ?>
+                        </td>
+                        <td style="white-space:nowrap;"><?= htmlspecialchars(paymentMethodLabel($o['payment_method'])) ?></td>
                         <td style="font-weight:600;">₱<?= number_format($o['total_amount']) ?></td>
                         <td><span class="status-badge status-<?= $o['status'] ?>"><?= $o['status'] ?></span>
                             <?php if ($updatedId === (int)$o['id']): ?><span class="flash-updated">Updated</span><?php endif; ?>
@@ -862,7 +878,7 @@ $configWarning     = isset($_GET['config_warning']);
                         </td>
                     </tr>
                     <tr class="order-items-row" id="expand-<?= $o['id'] ?>">
-                        <td colspan="8" style="padding:0;">
+                        <td colspan="10" style="padding:0;">
                             <div class="order-items-inner">
                                 <table>
                                     <thead><tr><th></th><th>Product</th><th>Category</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>

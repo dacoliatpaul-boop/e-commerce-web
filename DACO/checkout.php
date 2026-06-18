@@ -13,6 +13,25 @@ $errors  = [];
 $success = false;
 $order   = null;
 
+// ── Fetch user's saved address (to prefill the form) ───────────────────────
+try {
+    $stmt = $pdo->prepare('SELECT address FROM users WHERE id = ?');
+    $stmt->execute([$userId]);
+    $savedAddress = $stmt->fetchColumn() ?: '';
+} catch (PDOException $e) {
+    $savedAddress = '';
+}
+
+$paymentMethods = [
+    'bank_transfer' => 'Bank Transfer',
+    'cod'           => 'Cash on Delivery',
+    'gcash'         => 'GCash',
+];
+
+// Values to repopulate the form with (POSTed value wins, otherwise saved address)
+$shippingAddress = $_POST['shipping_address'] ?? $savedAddress;
+$paymentMethod   = $_POST['payment_method']   ?? '';
+
 // ── Fetch current cart ───────────────────────────────────────────────────
 function fetchCart(PDO $pdo, int $userId): array {
     $stmt = $pdo->prepare('
@@ -39,8 +58,19 @@ $total = array_sum(array_map(fn($i) => $i['price'] * $i['quantity'], $cartItems)
 // ── Place order on POST ──────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 
+    $shippingAddress = trim($_POST['shipping_address'] ?? '');
+    $paymentMethod   = trim($_POST['payment_method']   ?? '');
+
     if (empty($cartItems)) {
         $errors[] = 'Your cart is empty.';
+    }
+
+    if ($shippingAddress === '') {
+        $errors[] = 'Please enter a delivery address.';
+    }
+
+    if (!array_key_exists($paymentMethod, $paymentMethods)) {
+        $errors[] = 'Please select a valid payment method.';
     }
 
     if (empty($errors)) {
@@ -49,10 +79,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 
             // 1. Create the order header
             $stmt = $pdo->prepare('
-                INSERT INTO orders (user_id, total_amount, status)
-                VALUES (?, ?, "pending")
+                INSERT INTO orders (user_id, total_amount, status, shipping_address, payment_method)
+                VALUES (?, ?, "pending", ?, ?)
             ');
-            $stmt->execute([$userId, $total]);
+            $stmt->execute([$userId, $total, $shippingAddress, $paymentMethod]);
             $orderId = (int) $pdo->lastInsertId();
 
             // 2. Insert each order item (snapshot price)
@@ -75,7 +105,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             $pdo->commit();
 
             $success   = true;
-            $order     = ['id' => $orderId, 'total' => $total, 'items' => $cartItems];
+            $order     = [
+                'id'      => $orderId,
+                'total'   => $total,
+                'items'   => $cartItems,
+                'address' => $shippingAddress,
+                'payment' => $paymentMethods[$paymentMethod],
+            ];
             $cartItems = [];
             $total     = 0;
 
@@ -119,6 +155,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             <div class="summary-row total-row">
                 <span>Total</span>
                 <span>&#8369; <?= number_format($order['total']) ?></span>
+            </div>
+        </div>
+
+        <div class="order-summary-box">
+            <h3>Delivery & Payment</h3>
+            <div class="summary-row" style="display:block;">
+                <span style="display:block;color:#888;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;">Delivery Address</span>
+                <span style="display:block;"><?= nl2br(htmlspecialchars($order['address'])) ?></span>
+            </div>
+            <div class="summary-row total-row" style="display:block;">
+                <span style="display:block;color:#888;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;font-weight:400;">Payment Method</span>
+                <span style="display:block;font-weight:600;"><?= htmlspecialchars($order['payment']) ?></span>
             </div>
         </div>
 
@@ -171,6 +219,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                             title="Remove">✕</button>
                 </div>
                 <?php endforeach; ?>
+
+                <!-- Delivery & Payment -->
+                <div class="delivery-panel">
+                    <h2>Delivery & Payment</h2>
+
+                    <div class="field-group">
+                        <label for="shipping_address">Delivery Address</label>
+                        <textarea id="shipping_address" name="shipping_address" form="place-order-form"
+                                  rows="3" placeholder="House/Unit No., Street, Barangay, City, Province"
+                                  required><?= htmlspecialchars($shippingAddress) ?></textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="payment_method">Payment Method</label>
+                        <select id="payment_method" name="payment_method" form="place-order-form" required>
+                            <option value="" disabled <?= $paymentMethod === '' ? 'selected' : '' ?>>Select payment method</option>
+                            <?php foreach ($paymentMethods as $key => $label): ?>
+                                <option value="<?= $key ?>" <?= $paymentMethod === $key ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <!-- Order total & place order -->
@@ -187,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                     </div>
                 </div>
 
-                <form method="POST" action="checkout.php">
+                <form method="POST" action="checkout.php" id="place-order-form">
                     <button type="submit" name="place_order" class="btn-place-order">
                         Place Order
                     </button>

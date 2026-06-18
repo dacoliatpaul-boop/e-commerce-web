@@ -14,27 +14,29 @@ $success = '';
 
 // ── Fetch user details ────────────────────────────────────────────────────
 try {
-    $stmt = $pdo->prepare('SELECT id, email, full_name, phone, created_at FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, email, full_name, phone, address, created_at FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
 } catch (PDOException $e) {
-    $user = ['id' => $userId, 'email' => $_SESSION['email'] ?? '', 'full_name' => '', 'phone' => '', 'created_at' => null];
+    $user = ['id' => $userId, 'email' => $_SESSION['email'] ?? '', 'full_name' => '', 'phone' => '', 'address' => '', 'created_at' => null];
 }
 
 // ── Handle profile update ─────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $fullName = trim($_POST['full_name'] ?? '');
     $phone    = trim($_POST['phone']     ?? '');
+    $address  = trim($_POST['address']   ?? '');
 
     try {
-        $stmt = $pdo->prepare('UPDATE users SET full_name = ?, phone = ? WHERE id = ?');
-        $stmt->execute([$fullName, $phone, $userId]);
+        $stmt = $pdo->prepare('UPDATE users SET full_name = ?, phone = ?, address = ? WHERE id = ?');
+        $stmt->execute([$fullName, $phone, $address, $userId]);
         $user['full_name'] = $fullName;
         $user['phone']     = $phone;
+        $user['address']   = $address;
         $success = 'Profile updated.';
     } catch (PDOException $e) {
-        // full_name / phone columns may not exist yet — handled gracefully
-        $errors[] = 'Could not update profile. Make sure the full_name and phone columns exist in the users table.';
+        // full_name / phone / address columns may not exist yet — handled gracefully
+        $errors[] = 'Could not update profile. Make sure the full_name, phone, and address columns exist in the users table.';
     }
 }
 
@@ -42,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 try {
     $stmt = $pdo->prepare('
         SELECT o.id, o.total_amount, o.status, o.created_at,
+               o.shipping_address, o.payment_method,
                COUNT(oi.id) AS item_count
         FROM   orders o
         LEFT   JOIN order_items oi ON oi.order_id = o.id
@@ -90,6 +93,15 @@ function statusMeta($status) {
         'cancelled'  => ['label' => 'Cancelled',   'class' => 'status-cancelled',  'icon' => '✕'],
     ];
     return $map[$status] ?? ['label' => ucfirst($status), 'class' => 'status-pending', 'icon' => '·'];
+}
+
+function paymentMethodLabel($method) {
+    $map = [
+        'bank_transfer' => 'Bank Transfer',
+        'cod'           => 'Cash on Delivery',
+        'gcash'         => 'GCash',
+    ];
+    return $map[$method] ?? ($method ? ucfirst(str_replace('_', ' ', $method)) : 'N/A');
 }
 
 $memberSince = $user['created_at'] ? date('F Y', strtotime($user['created_at'])) : 'N/A';
@@ -229,6 +241,21 @@ $totalSpent  = array_sum(array_column($orders, 'total_amount'));
             font-family: inherit;
         }
 
+        .field-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d4d4d4;
+            font-size: .88rem;
+            color: #171717;
+            background: #fafafa;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color .2s;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .field-group textarea:focus { border-color: #171717; background: #fff; }
         .field-group input:focus { border-color: #171717; background: #fff; }
         .field-group input[readonly] { background: #f5f5f5; color: #555; cursor: not-allowed; }
 
@@ -550,6 +577,10 @@ $totalSpent  = array_sum(array_column($orders, 'total_amount'));
                             <input type="text" name="phone" placeholder="+63 9XX XXX XXXX"
                                 value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>">
                         </div>
+                        <div class="field-group">
+                            <label>Address</label>
+                            <textarea name="address" rows="3" placeholder="House/Unit No., Street, Barangay, City, Province"><?php echo htmlspecialchars($user['address'] ?? ''); ?></textarea>
+                        </div>
                         <button type="submit" name="update_profile" class="btn-save">Save Changes</button>
                     </form>
 
@@ -638,6 +669,18 @@ $totalSpent  = array_sum(array_column($orders, 'total_amount'));
                             </span>
                         </div>
                         <?php endforeach; ?>
+
+                        <!-- Delivery & Payment -->
+                        <div style="display:flex;gap:24px;flex-wrap:wrap;padding:14px 0 4px;border-top:1px solid #f0f0f0;margin-top:8px;font-size:.78rem;">
+                            <div style="flex:1;min-width:180px;">
+                                <p style="color:#888;letter-spacing:.08em;text-transform:uppercase;font-size:.65rem;margin-bottom:4px;">Delivery Address</p>
+                                <p style="color:#171717;"><?php echo $order['shipping_address'] ? nl2br(htmlspecialchars($order['shipping_address'])) : 'N/A'; ?></p>
+                            </div>
+                            <div>
+                                <p style="color:#888;letter-spacing:.08em;text-transform:uppercase;font-size:.65rem;margin-bottom:4px;">Payment Method</p>
+                                <p style="color:#171717;font-weight:600;"><?php echo htmlspecialchars(paymentMethodLabel($order['payment_method'])); ?></p>
+                            </div>
+                        </div>
 
                         <!-- Row total -->
                         <div style="display:flex;justify-content:flex-end;padding:14px 0 4px;font-size:.8rem;">
