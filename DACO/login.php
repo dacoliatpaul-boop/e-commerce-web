@@ -3,7 +3,7 @@ require_once 'config/app.php';
 
 $errors = [];
 
-if (!empty($_SESSION['user_id']) || isset($_COOKIE['user_id'])) {
+if (!empty($_SESSION['user_id'])) {
     $adminEmails = ['dco@admin.com', 'owner@dco.com'];
     header('Location: ' . (in_array($_SESSION['email'] ?? '', $adminEmails) ? 'admin.php' : 'index.php'));
     exit;
@@ -27,8 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['email']   = $user['email'];
 
-            // Set login cookies — auto-logout after timeout
-            $timeout = 5; // change this
+            // Set login timeout — change $timeout to however many seconds you want
+            $timeout = 5;
             $_SESSION['login_expiry'] = time() + $timeout;
             setcookie('user_id',  $user['id'],    time() + $timeout, '/', '', false, true);
             setcookie('username', $user['email'], time() + $timeout, '/', '', false, true);
