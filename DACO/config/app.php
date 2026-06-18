@@ -18,6 +18,19 @@ session_set_cookie_params([
 
 session_start();
 
+// ── Auto-logout: destroy session if the login timeout has passed ────────────
+if (!empty($_SESSION['user_id']) && !empty($_SESSION['login_expiry'])) {
+    if (time() > $_SESSION['login_expiry']) {
+        // Timeout reached — wipe session and cookies
+        $_SESSION = [];
+        session_destroy();
+        setcookie('user_id',  '', time() - 3600, '/', '', false, true);
+        setcookie('username', '', time() - 3600, '/', '', false, true);
+        header('Location: login.php');
+        exit;
+    }
+}
+
 // ── Database Configuration ──────────────────────────────────────────────────
 define('DB_HOST',     'localhost');
 define('DB_NAME',     'dcoweb');       // ← new database name

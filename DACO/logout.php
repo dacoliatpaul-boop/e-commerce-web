@@ -1,14 +1,10 @@
 <?php
-require_once 'config/app.php';   // starts session
-
-// Clear this user's cart (it's DB-backed now, not sessionStorage — see cart.js)
-if (!empty($_SESSION['user_id'])) {
-    $pdo->prepare('DELETE FROM cart_items WHERE user_id = ?')->execute([(int) $_SESSION['user_id']]);
-}
+require_once 'config/app.php';
 
 // Delete login cookies by setting expiry in the past
-setcookie('user_id',  '', time() - 3600, '/', '', false, true);
-setcookie('username', '', time() - 3600, '/', '', false, true);
+setcookie('user_id',    '', time() - 3600, '/', '', false, true);
+setcookie('username',   '', time() - 3600, '/', '', false, true);
+setcookie('dco_expiry', '', time() - 3600, '/');
 
 // Also destroy session (used by shopping cart)
 $_SESSION = [];
@@ -23,18 +19,5 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-
-session_destroy();
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Logging out…</title>
-</head>
-<body>
-<script>
-    window.location.replace('index.php');
-</script>
-</body>
-</html>
+header('Location: index.php');
+exit();
