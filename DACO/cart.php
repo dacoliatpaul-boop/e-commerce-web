@@ -43,7 +43,7 @@ try {
             }
 
       
-            $check = $pdo->prepare('SELECT id FROM products WHERE id = ?');
+            $check = $pdo->prepare('SELECT id FROM products WHERE id = ? AND deleted_at IS NULL');
             $check->execute([$productId]);
             if (!$check->fetch()) {
                 echo json_encode(['success' => false, 'message' => 'Product not found.']);

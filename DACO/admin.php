@@ -33,7 +33,7 @@ function paymentMethodLabel($method) {
 }
 
 function regenerateProductsConfig(PDO $pdo): bool {
-    $rows = $pdo->query('SELECT id, name, category, price, image, featured, wide FROM products ORDER BY id')->fetchAll();
+    $rows = $pdo->query('SELECT id, name, category, price, image, featured, wide FROM products WHERE deleted_at IS NULL ORDER BY id')->fetchAll();
 
     $lines = [];
     $lines[] = '<?php';
@@ -83,17 +83,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product'])) {
     $productId = (int) $_POST['product_id'];
     if ($productId) {
         try {
-            $pdo->prepare('DELETE FROM products WHERE id = ?')->execute([$productId]);
+            $pdo->prepare('UPDATE products SET deleted_at = NOW() WHERE id = ?')->execute([$productId]);
             regenerateProductsConfig($pdo);
             header('Location: admin.php?tab=products&deleted=' . $productId);
             exit;
         } catch (PDOException $e) {
-            // Likely a foreign key constraint (product still referenced by orders/cart)
             header('Location: admin.php?tab=products&delete_error=' . $productId);
             exit;
         }
     }
     header('Location: admin.php?tab=products');
+    exit;
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restore_product'])) {
+    $productId = (int) $_POST['product_id'];
+    if ($productId) {
+        $pdo->prepare('UPDATE products SET deleted_at = NULL WHERE id = ?')->execute([$productId]);
+        regenerateProductsConfig($pdo);
+        header('Location: admin.php?tab=products&view=archived&restored=' . $productId);
+        exit;
+    }
+    header('Location: admin.php?tab=products&view=archived');
+    exit;
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product_permanent'])) {
+    $productId = (int) $_POST['product_id'];
+    if ($productId) {
+        try {
+            $pdo->prepare('DELETE FROM products WHERE id = ?')->execute([$productId]);
+            regenerateProductsConfig($pdo);
+            header('Location: admin.php?tab=products&view=archived&perm_deleted=' . $productId);
+            exit;
+        } catch (PDOException $e) {
+            header('Location: admin.php?tab=products&view=archived&perm_delete_error=' . $productId);
+            exit;
+        }
+    }
+    header('Location: admin.php?tab=products&view=archived');
     exit;
 }
 
@@ -221,8 +251,16 @@ $products = $pdo->query('
     FROM products p
     LEFT JOIN order_items oi ON oi.product_id = p.id
     LEFT JOIN orders o ON o.id = oi.order_id AND o.status != "cancelled"
+    WHERE p.deleted_at IS NULL
     GROUP BY p.id
     ORDER BY units_sold DESC
+')->fetchAll();
+
+$archivedProducts = $pdo->query('
+    SELECT id, name, category, price, image, featured, wide, deleted_at
+    FROM products
+    WHERE deleted_at IS NOT NULL
+    ORDER BY deleted_at DESC
 ')->fetchAll();
 
 
@@ -242,9 +280,13 @@ $messages = $pdo->query('
 ')->fetchAll();
 
 $activeTab = $_GET['tab'] ?? 'overview';
+$productsView = ($_GET['view'] ?? '') === 'archived' ? 'archived' : 'active';
 $updatedId = isset($_GET['updated']) ? (int)$_GET['updated'] : 0;
 $deletedId = isset($_GET['deleted']) ? (int)$_GET['deleted'] : 0;
 $deleteErrorId    = isset($_GET['delete_error']) ? (int)$_GET['delete_error'] : 0;
+$restoredId       = isset($_GET['restored']) ? (int)$_GET['restored'] : 0;
+$permDeletedId    = isset($_GET['perm_deleted']) ? (int)$_GET['perm_deleted'] : 0;
+$permDeleteErrorId = isset($_GET['perm_delete_error']) ? (int)$_GET['perm_delete_error'] : 0;
 $productAddedId   = isset($_GET['product_added']) ? (int)$_GET['product_added'] : 0;
 $productUpdatedId = isset($_GET['product_updated']) ? (int)$_GET['product_updated'] : 0;
 $configWarning     = isset($_GET['config_warning']);
@@ -956,14 +998,38 @@ $configWarning     = isset($_GET['config_warning']);
                 <button type="button" class="btn-update" id="add-product-btn" style="padding:9px 18px;">+ Add Product</button>
             </div>
 
+            <div style="display:flex;gap:8px;margin-bottom:20px;">
+                <a href="?tab=products" style="padding:7px 14px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border-radius:3px;<?= $productsView === 'active' ? 'background:#171717;color:#fff;' : 'background:#f1f1ef;color:var(--mid);' ?>">
+                    Active (<?= count($products) ?>)
+                </a>
+                <a href="?tab=products&view=archived" style="padding:7px 14px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border-radius:3px;<?= $productsView === 'archived' ? 'background:#171717;color:#fff;' : 'background:#f1f1ef;color:var(--mid);' ?>">
+                    Archived (<?= count($archivedProducts) ?>)
+                </a>
+            </div>
+
             <?php if ($deletedId): ?>
                 <p style="font-size:10px;letter-spacing:.12em;color:var(--green);margin-bottom:20px;">
-                    ✓ Product #<?= $deletedId ?> deleted.
+                    ✓ Product #<?= $deletedId ?> archived. You can restore it from the Archived tab.
                 </p>
             <?php endif; ?>
             <?php if ($deleteErrorId): ?>
                 <p style="font-size:10px;letter-spacing:.12em;color:var(--red);margin-bottom:20px;">
-                    ✕ Could not delete product #<?= $deleteErrorId ?> — it's still referenced by existing orders or carts.
+                    ✕ Could not archive product #<?= $deleteErrorId ?>.
+                </p>
+            <?php endif; ?>
+            <?php if ($restoredId): ?>
+                <p style="font-size:10px;letter-spacing:.12em;color:var(--green);margin-bottom:20px;">
+                    ✓ Product #<?= $restoredId ?> restored.
+                </p>
+            <?php endif; ?>
+            <?php if ($permDeletedId): ?>
+                <p style="font-size:10px;letter-spacing:.12em;color:var(--green);margin-bottom:20px;">
+                    ✓ Product #<?= $permDeletedId ?> permanently deleted.
+                </p>
+            <?php endif; ?>
+            <?php if ($permDeleteErrorId): ?>
+                <p style="font-size:10px;letter-spacing:.12em;color:var(--red);margin-bottom:20px;">
+                    ✕ Could not permanently delete product #<?= $permDeleteErrorId ?> — it's still referenced by existing orders or carts.
                 </p>
             <?php endif; ?>
             <?php if ($productAddedId): ?>
@@ -981,6 +1047,53 @@ $configWarning     = isset($_GET['config_warning']);
                     ⚠ Saved to the database, but products_config.php could not be rewritten automatically — check file permissions.
                 </p>
             <?php endif; ?>
+
+            <?php if ($productsView === 'archived'): ?>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Archived</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($archivedProducts)): ?>
+                    <tr class="empty-row"><td colspan="6">No archived products.</td></tr>
+                    <?php else: foreach ($archivedProducts as $p): ?>
+                    <tr>
+                        <td>
+                            <?php if (!empty($p['image'])): ?>
+                                <img class="prod-thumb" src="<?= htmlspecialchars($p['image']) ?>" alt="">
+                            <?php else: ?>
+                                <div class="prod-thumb-placeholder"></div>
+                            <?php endif; ?>
+                        </td>
+                        <td style="font-weight:500;"><?= htmlspecialchars($p['name']) ?></td>
+                        <td style="color:var(--mid);font-size:10px;letter-spacing:.08em;text-transform:uppercase;"><?= htmlspecialchars($p['category']) ?></td>
+                        <td>₱<?= number_format($p['price']) ?></td>
+                        <td style="color:var(--mid);font-size:11px;"><?= htmlspecialchars($p['deleted_at']) ?></td>
+                        <td>
+                            <div style="display:flex;gap:6px;">
+                                <form method="POST" action="?tab=products&view=archived">
+                                    <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+                                    <button type="submit" name="restore_product" class="btn-update" style="padding:7px 12px;">Restore</button>
+                                </form>
+                                <form method="POST" action="?tab=products&view=archived"
+                                      onsubmit="return confirm('Permanently delete &quot;<?= htmlspecialchars(addslashes($p['name'])) ?>&quot;? This cannot be undone.');">
+                                    <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+                                    <button type="submit" name="delete_product_permanent" class="btn-delete">Delete Permanently</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+            <?php else: ?>
 
             <?php
             $totalRevAll = max(1, max(array_column($products ?: [['revenue'=>1]], 'revenue')));
@@ -1028,9 +1141,9 @@ $configWarning     = isset($_GET['config_warning']);
                                     data-featured="<?= !empty($p['featured']) ? '1' : '0' ?>"
                                     data-wide="<?= !empty($p['wide']) ? '1' : '0' ?>">Edit</button>
                                 <form method="POST" action="?tab=products"
-                                      onsubmit="return confirm('Delete &quot;<?= htmlspecialchars(addslashes($p['name'])) ?>&quot;? This cannot be undone.');">
+                                      onsubmit="return confirm('Archive &quot;<?= htmlspecialchars(addslashes($p['name'])) ?>&quot;? You can restore it later from the Archived tab.');">
                                     <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
-                                    <button type="submit" name="delete_product" class="btn-delete">Delete</button>
+                                    <button type="submit" name="delete_product" class="btn-delete">Archive</button>
                                 </form>
                             </div>
                         </td>
@@ -1038,6 +1151,7 @@ $configWarning     = isset($_GET['config_warning']);
                     <?php endforeach; endif; ?>
                 </tbody>
             </table>
+            <?php endif; ?>
 
             <!-- ── Add / Edit Product Modal ── -->
             <div class="modal-overlay" id="product-modal">
