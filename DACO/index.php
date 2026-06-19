@@ -50,6 +50,9 @@ $featured = array_filter($products, function($p) { return !empty($p['featured'])
             $productId = (int) ($p['id'] ?? 0);
             $cardId    = 'showcase-card-' . strtolower(preg_replace('/\s+/', '-', $p['name']));
             $hasImg    = !empty($p['image']);
+            $stock     = (int) ($p['stock'] ?? 0);
+            $outOfStock = $stock <= 0;
+            if ($outOfStock) { $cardClass .= ' out-of-stock'; }
         ?>
         <div class="<?php echo $cardClass; ?>" id="<?php echo $cardId; ?>">
             <a href="products.php" class="product-img-wrap-feu" style="display:block;">
@@ -63,14 +66,23 @@ $featured = array_filter($products, function($p) { return !empty($p['featured'])
                         <span class="product-placeholder-label">No image</span>
                     </div>
                 <?php } ?>
+                <?php if ($outOfStock) { ?>
+                    <span class="out-of-stock-badge">Out of Stock</span>
+                <?php } elseif ($stock <= 5) { ?>
+                    <span class="low-stock-badge">Only <?php echo $stock; ?> left</span>
+                <?php } ?>
             </a>
             <span class="product-category"><?php echo htmlspecialchars($p['category']); ?></span>
             <span class="product-name"><?php echo htmlspecialchars($p['name']); ?></span>
             <span class="product-price"><?php echo $display; ?></span>
-            <button class="btn-add-cart-index"
-                onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>',<?php echo $p['price']; ?>,<?php echo $productId; ?>)">
-                + Add to Cart
-            </button>
+            <?php if ($outOfStock) { ?>
+                <button class="btn-add-cart-index" disabled>Sold Out</button>
+            <?php } else { ?>
+                <button class="btn-add-cart-index"
+                    onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>',<?php echo $p['price']; ?>,<?php echo $productId; ?>)">
+                    + Add to Cart
+                </button>
+            <?php } ?>
         </div>
         <?php } ?>
 

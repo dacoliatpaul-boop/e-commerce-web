@@ -43,12 +43,30 @@ try {
             }
 
       
-            $check = $pdo->prepare('SELECT id FROM products WHERE id = ? AND deleted_at IS NULL');
+            $check = $pdo->prepare('SELECT id, name, stock FROM products WHERE id = ? AND deleted_at IS NULL');
             $check->execute([$productId]);
-            if (!$check->fetch()) {
+            $product = $check->fetch();
+            if (!$product) {
                 echo json_encode(['success' => false, 'message' => 'Product not found.']);
                 exit;
             }
+
+            if ((int) $product['stock'] <= 0) {
+                echo json_encode(['success' => false, 'message' => $product['name'] . ' is out of stock.']);
+                exit;
+            }
+
+            // Don't let the cart hold more than what's currently in stock.
+            $existingStmt = $pdo->prepare('SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?');
+            $existingStmt->execute([$userId, $productId]);
+            $existingQty = (int) ($existingStmt->fetchColumn() ?: 0);
+
+            $availableToAdd = (int) $product['stock'] - $existingQty;
+            if ($availableToAdd <= 0) {
+                echo json_encode(['success' => false, 'message' => 'You already have all available stock of ' . $product['name'] . ' in your cart.']);
+                exit;
+            }
+            $qty = min($qty, $availableToAdd);
 
             $stmt = $pdo->prepare('
                 INSERT INTO cart_items (user_id, product_id, quantity)

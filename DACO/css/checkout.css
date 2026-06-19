@@ -127,6 +127,17 @@
     font-size: .8rem;
     color: #666;
 }
+.ci-stock-warning {
+    font-size: .75rem;
+    color: #b91c1c;
+    font-weight: 600;
+}
+.cart-item.stock-issue {
+    background: #fef2f2;
+}
+.cart-item.stock-issue .cart-item-img {
+    opacity: .6;
+}
 
 .cart-item-price {
     font-size: .95rem;
@@ -246,6 +257,18 @@
     margin-bottom: 12px;
 }
 .btn-place-order:hover { background: #333; }
+.btn-place-order:disabled {
+    background: #ddd;
+    color: #888;
+    cursor: not-allowed;
+}
+.btn-place-order:disabled:hover { background: #ddd; }
+.stock-issue-note {
+    font-size: .75rem;
+    color: #b91c1c;
+    text-align: center;
+    margin: -4px 0 12px;
+}
 
 .btn-keep-shopping {
     display: block;

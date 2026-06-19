@@ -10,6 +10,7 @@ $products = [
         'image'    => 'img/shirt2.png',
         'featured' => true,
         'wide'     => true,
+        'stock'    => 25,
     ],
     [
         'id'       => 2,
@@ -19,6 +20,7 @@ $products = [
         'image'    => 'img/shirt1.png',
         'featured' => false,
         'wide'     => true,
+        'stock'    => 25,
     ],
     [
         'id'       => 3,
@@ -28,6 +30,7 @@ $products = [
         'image'    => 'img/shirt3.png',
         'featured' => false,
         'wide'     => true,
+        'stock'    => 25,
     ],
     [
         'id'       => 4,
@@ -37,6 +40,7 @@ $products = [
         'image'    => 'img/shirt4.png',
         'featured' => false,
         'wide'     => true,
+        'stock'    => 25,
     ],
     [
         'id'       => 5,
@@ -46,6 +50,7 @@ $products = [
         'image'    => 'img/baggy1.jpeg',
         'featured' => true,
         'wide'     => false,
+        'stock'    => 30,
     ],
     [
         'id'       => 6,
@@ -55,6 +60,7 @@ $products = [
         'image'    => 'img/cotton1.jpeg',
         'featured' => false,
         'wide'     => false,
+        'stock'    => 40,
     ],
     [
         'id'       => 7,
@@ -64,6 +70,7 @@ $products = [
         'image'    => 'img/wool1.jpeg',
         'featured' => false,
         'wide'     => false,
+        'stock'    => 20,
     ],
     [
         'id'       => 8,
@@ -73,6 +80,7 @@ $products = [
         'image'    => 'img/bag1.jpeg',
         'featured' => true,
         'wide'     => false,
+        'stock'    => 15,
     ],
     [
         'id'       => 9,
@@ -82,6 +90,7 @@ $products = [
         'image'    => 'img/belt1.jpeg',
         'featured' => false,
         'wide'     => false,
+        'stock'    => 35,
     ],
     [
         'id'       => 10,
@@ -91,6 +100,7 @@ $products = [
         'image'    => 'img/ring1.jpeg',
         'featured' => false,
         'wide'     => false,
+        'stock'    => 30,
     ],
     [
         'id'       => 11,
@@ -100,6 +110,7 @@ $products = [
         'image'    => 'img/speaker1.jpeg',
         'featured' => true,
         'wide'     => false,
+        'stock'    => 10,
     ],
     [
         'id'       => 12,
@@ -109,6 +120,7 @@ $products = [
         'image'    => 'img/device1.jpeg',
         'featured' => false,
         'wide'     => false,
+        'stock'    => 12,
     ],
     [
         'id'       => 13,
@@ -118,6 +130,7 @@ $products = [
         'image'    => 'img/perfume1.jpeg',
         'featured' => true,
         'wide'     => false,
+        'stock'    => 8,
     ],
     [
         'id'       => 14,
@@ -127,6 +140,7 @@ $products = [
         'image'    => 'img/perfume2.jpeg',
         'featured' => true,
         'wide'     => false,
+        'stock'    => 0,
     ],
     [
         'id'       => 16,
@@ -136,5 +150,6 @@ $products = [
         'image'    => 'img/venom-wave-5090-1781672757.jpg',
         'featured' => true,
         'wide'     => false,
+        'stock'    => 3,
     ],
 ];

@@ -57,8 +57,10 @@ if (!isset($products)) { $products = []; }
             $productId = (int) ($p['id'] ?? 0);
             $cardId    = 'product-' . ($i + 1);
             $hasImg    = !empty($p['image']);
+            $stock     = (int) ($p['stock'] ?? 0);
+            $outOfStock = $stock <= 0;
         ?>
-        <div class="product-card" id="<?php echo $cardId; ?>" data-category="<?php echo $slug; ?>">
+        <div class="product-card<?php echo $outOfStock ? ' out-of-stock' : ''; ?>" id="<?php echo $cardId; ?>" data-category="<?php echo $slug; ?>">
             <a href="#" class="product-img-wrap">
                 <?php if ($hasImg) { ?>
                     <img src="<?php echo htmlspecialchars($p['image']); ?>"
@@ -70,19 +72,29 @@ if (!isset($products)) { $products = []; }
                         <span class="product-placeholder-label">No image</span>
                     </div>
                 <?php } ?>
+                <?php if ($outOfStock) { ?>
+                    <span class="out-of-stock-badge">Out of Stock</span>
+                <?php } elseif ($stock <= 5) { ?>
+                    <span class="low-stock-badge">Only <?php echo $stock; ?> left</span>
+                <?php } ?>
             </a>
             <span class="product-category"><?php echo htmlspecialchars($p['category']); ?></span>
             <span class="product-name"><?php echo htmlspecialchars($p['name']); ?></span>
             <span class="product-price"><?php echo $display; ?></span>
             <div class="product-actions">
-                <button class="btn-buy-now"
-                    onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>',<?php echo $p['price']; ?>,<?php echo $productId; ?>)">
-                    Buy Now
-                </button>
-                <button class="btn-add-cart"
-                    onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>',<?php echo $p['price']; ?>,<?php echo $productId; ?>)">
-                    + Cart
-                </button>
+                <?php if ($outOfStock) { ?>
+                    <button class="btn-buy-now" disabled>Sold Out</button>
+                    <button class="btn-add-cart" disabled>Sold Out</button>
+                <?php } else { ?>
+                    <button class="btn-buy-now"
+                        onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>',<?php echo $p['price']; ?>,<?php echo $productId; ?>)">
+                        Buy Now
+                    </button>
+                    <button class="btn-add-cart"
+                        onclick="DCO_addToCart('<?php echo $jsName; ?>','<?php echo $jsCat; ?>',<?php echo $p['price']; ?>,<?php echo $productId; ?>)">
+                        + Cart
+                    </button>
+                <?php } ?>
             </div>
         </div>
         <?php } ?>

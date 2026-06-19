@@ -33,7 +33,7 @@ function paymentMethodLabel($method) {
 }
 
 function regenerateProductsConfig(PDO $pdo): bool {
-    $rows = $pdo->query('SELECT id, name, category, price, image, featured, wide FROM products WHERE deleted_at IS NULL ORDER BY id')->fetchAll();
+    $rows = $pdo->query('SELECT id, name, category, price, image, featured, wide, stock FROM products WHERE deleted_at IS NULL ORDER BY id')->fetchAll();
 
     $lines = [];
     $lines[] = '<?php';
@@ -53,6 +53,7 @@ function regenerateProductsConfig(PDO $pdo): bool {
         $lines[] = "        'image'    => '" . addslashes($r['image'] ?? '') . "',";
         $lines[] = "        'featured' => " . ($r['featured'] ? 'true' : 'false') . ',';
         $lines[] = "        'wide'     => " . ($r['wide'] ? 'true' : 'false') . ',';
+        $lines[] = "        'stock'    => " . (int) $r['stock'] . ',';
         $lines[] = '    ],';
     }
 
@@ -62,7 +63,7 @@ function regenerateProductsConfig(PDO $pdo): bool {
 }
 
 $errors    = [];
-$formData  = ['id' => 0, 'name' => '', 'category' => 'Clothes', 'price' => '', 'featured' => false, 'wide' => false];
+$formData  = ['id' => 0, 'name' => '', 'category' => 'Clothes', 'price' => '', 'stock' => '', 'featured' => false, 'wide' => false];
 $openModal = false;
 
 
@@ -143,14 +144,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
     $formData['name']     = trim($_POST['name'] ?? '');
     $formData['category'] = trim($_POST['category'] ?? '');
     $formData['price']    = trim($_POST['price'] ?? '');
+    $formData['stock']    = trim($_POST['stock'] ?? '');
     $formData['featured'] = isset($_POST['featured']);
     $formData['wide']     = isset($_POST['wide']);
 
     $priceVal = (float) $formData['price'];
+    $stockVal = (int) $formData['stock'];
 
     if ($formData['name'] === '')     $errors[] = 'Product name is required.';
     if ($formData['category'] === '') $errors[] = 'Category is required.';
     if ($priceVal <= 0)                $errors[] = 'Price must be greater than 0.';
+    if ($formData['stock'] === '' || $stockVal < 0) $errors[] = 'Stock must be a whole number of 0 or more.';
 
     $imagePath = null; // null = leave image unchanged
     if (empty($errors) && !empty($_FILES['image_file']['name']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
@@ -173,16 +177,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
         try {
             if ($formData['id']) {
                 if ($imagePath !== null) {
-                    $pdo->prepare('UPDATE products SET name=?, category=?, price=?, image=?, featured=?, wide=? WHERE id=?')
-                        ->execute([$formData['name'], $formData['category'], $priceVal, $imagePath, (int)$formData['featured'], (int)$formData['wide'], $formData['id']]);
+                    $pdo->prepare('UPDATE products SET name=?, category=?, price=?, image=?, featured=?, wide=?, stock=? WHERE id=?')
+                        ->execute([$formData['name'], $formData['category'], $priceVal, $imagePath, (int)$formData['featured'], (int)$formData['wide'], $stockVal, $formData['id']]);
                 } else {
-                    $pdo->prepare('UPDATE products SET name=?, category=?, price=?, featured=?, wide=? WHERE id=?')
-                        ->execute([$formData['name'], $formData['category'], $priceVal, (int)$formData['featured'], (int)$formData['wide'], $formData['id']]);
+                    $pdo->prepare('UPDATE products SET name=?, category=?, price=?, featured=?, wide=?, stock=? WHERE id=?')
+                        ->execute([$formData['name'], $formData['category'], $priceVal, (int)$formData['featured'], (int)$formData['wide'], $stockVal, $formData['id']]);
                 }
                 $flashParam = 'product_updated=' . $formData['id'];
             } else {
-                $stmt = $pdo->prepare('INSERT INTO products (name, category, price, image, featured, wide) VALUES (?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$formData['name'], $formData['category'], $priceVal, $imagePath ?? '', (int)$formData['featured'], (int)$formData['wide']]);
+                $stmt = $pdo->prepare('INSERT INTO products (name, category, price, image, featured, wide, stock) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$formData['name'], $formData['category'], $priceVal, $imagePath ?? '', (int)$formData['featured'], (int)$formData['wide'], $stockVal]);
                 $flashParam = 'product_added=' . $pdo->lastInsertId();
             }
 
@@ -245,7 +249,7 @@ foreach ($orderItems as $oi) {
 
 
 $products = $pdo->query('
-    SELECT p.id, p.name, p.category, p.price, p.image, p.featured, p.wide,
+    SELECT p.id, p.name, p.category, p.price, p.image, p.featured, p.wide, p.stock,
            COALESCE(SUM(oi.quantity), 0) AS units_sold,
            COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS revenue
     FROM products p
@@ -257,7 +261,7 @@ $products = $pdo->query('
 ')->fetchAll();
 
 $archivedProducts = $pdo->query('
-    SELECT id, name, category, price, image, featured, wide, deleted_at
+    SELECT id, name, category, price, image, featured, wide, stock, deleted_at
     FROM products
     WHERE deleted_at IS NOT NULL
     ORDER BY deleted_at DESC
@@ -519,6 +523,21 @@ $configWarning     = isset($_GET['config_warning']);
         .status-shipped    { background: #ede9fe; color: #5b21b6; }
         .status-delivered  { background: #dcfce7; color: #166534; }
         .status-cancelled  { background: #fee2e2; color: #991b1b; }
+
+        /* ── Stock badge ── */
+        .stock-badge {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 2px;
+            white-space: nowrap;
+        }
+        .stock-ok   { background: #dcfce7; color: #166534; }
+        .stock-low  { background: #fef3c7; color: #92400e; }
+        .stock-out  { background: #fee2e2; color: #991b1b; }
 
         /* ── Product thumbnail ── */
         .prod-thumb {
@@ -1105,6 +1124,7 @@ $configWarning     = isset($_GET['config_warning']);
                         <th>Name</th>
                         <th>Category</th>
                         <th>Price</th>
+                        <th>Stock</th>
                         <th>Units Sold</th>
                         <th>Revenue</th>
                         <th>Actions</th>
@@ -1112,7 +1132,7 @@ $configWarning     = isset($_GET['config_warning']);
                 </thead>
                 <tbody>
                     <?php if (empty($products)): ?>
-                    <tr class="empty-row"><td colspan="7">No products in database.</td></tr>
+                    <tr class="empty-row"><td colspan="8">No products in database.</td></tr>
                     <?php else: foreach ($products as $p): ?>
                     <tr>
                         <td>
@@ -1125,6 +1145,15 @@ $configWarning     = isset($_GET['config_warning']);
                         <td style="font-weight:500;"><?= htmlspecialchars($p['name']) ?></td>
                         <td style="color:var(--mid);font-size:10px;letter-spacing:.08em;text-transform:uppercase;"><?= htmlspecialchars($p['category']) ?></td>
                         <td>₱<?= number_format($p['price']) ?></td>
+                        <td>
+                            <?php if ((int)$p['stock'] <= 0): ?>
+                                <span class="stock-badge stock-out">Out of stock</span>
+                            <?php elseif ((int)$p['stock'] <= 5): ?>
+                                <span class="stock-badge stock-low"><?= (int)$p['stock'] ?> left</span>
+                            <?php else: ?>
+                                <span class="stock-badge stock-ok"><?= (int)$p['stock'] ?> in stock</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?= $p['units_sold'] ?></td>
                         <td>
                             ₱<?= number_format($p['revenue']) ?>
@@ -1137,6 +1166,7 @@ $configWarning     = isset($_GET['config_warning']);
                                     data-name="<?= htmlspecialchars($p['name'], ENT_QUOTES) ?>"
                                     data-category="<?= htmlspecialchars($p['category'], ENT_QUOTES) ?>"
                                     data-price="<?= htmlspecialchars($p['price'], ENT_QUOTES) ?>"
+                                    data-stock="<?= htmlspecialchars($p['stock'], ENT_QUOTES) ?>"
                                     data-image="<?= htmlspecialchars($p['image'] ?? '', ENT_QUOTES) ?>"
                                     data-featured="<?= !empty($p['featured']) ? '1' : '0' ?>"
                                     data-wide="<?= !empty($p['wide']) ? '1' : '0' ?>">Edit</button>
@@ -1183,6 +1213,11 @@ $configWarning     = isset($_GET['config_warning']);
                         <div class="pf-row">
                             <label for="pf-price">Price (₱)</label>
                             <input type="number" name="price" id="pf-price" min="0" step="0.01" value="<?= htmlspecialchars($formData['price']) ?>" required>
+                        </div>
+
+                        <div class="pf-row">
+                            <label for="pf-stock">Stock</label>
+                            <input type="number" name="stock" id="pf-stock" min="0" step="1" value="<?= htmlspecialchars($formData['stock']) ?>" required>
                         </div>
 
                         <div class="pf-row">
@@ -1325,6 +1360,7 @@ document.querySelectorAll('.order-row').forEach(function(row) {
     var nameField  = document.getElementById('pf-name');
     var catField   = document.getElementById('pf-category');
     var priceField = document.getElementById('pf-price');
+    var stockField = document.getElementById('pf-stock');
     var featField  = document.getElementById('pf-featured');
     var wideField  = document.getElementById('pf-wide');
     var imgInfo    = document.getElementById('pf-current-image');
@@ -1339,6 +1375,7 @@ document.querySelectorAll('.order-row').forEach(function(row) {
         nameField.value   = data.name || '';
         catField.value    = data.category || 'Clothes';
         priceField.value  = data.price || '';
+        stockField.value  = (data.stock !== undefined && data.stock !== null && data.stock !== '') ? data.stock : '0';
         featField.checked = data.featured === '1';
         wideField.checked = data.wide === '1';
 
@@ -1369,6 +1406,7 @@ document.querySelectorAll('.order-row').forEach(function(row) {
         name:     '<?= addslashes($formData['name']) ?>',
         category: '<?= addslashes($formData['category']) ?>',
         price:    '<?= addslashes((string)$formData['price']) ?>',
+        stock:    '<?= addslashes((string)$formData['stock']) ?>',
         featured: '<?= $formData['featured'] ? '1' : '0' ?>',
         wide:     '<?= $formData['wide'] ? '1' : '0' ?>'
     });

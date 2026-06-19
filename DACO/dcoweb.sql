@@ -1,9 +1,31 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Jun 19, 2026 at 12:47 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
 
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `dcoweb`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cart_items`
+--
 
 CREATE TABLE `cart_items` (
   `id` int(10) UNSIGNED NOT NULL,
@@ -13,6 +35,11 @@ CREATE TABLE `cart_items` (
   `added_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `contact_messages`
+--
 
 CREATE TABLE `contact_messages` (
   `id` int(11) NOT NULL,
@@ -23,13 +50,19 @@ CREATE TABLE `contact_messages` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
+--
+-- Dumping data for table `contact_messages`
+--
 
 INSERT INTO `contact_messages` (`id`, `name`, `email`, `subject`, `message`, `created_at`) VALUES
 (1, 'paul', 'dacoliatpaul@gmail.com', 'laptop', 'some keys are not working', '2026-06-17 16:46:43'),
 (3, 'Maku', 'maku@gmail.com', 'Price', 'ang mahal', '2026-06-19 09:01:35');
 
--
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `orders`
+--
 
 CREATE TABLE `orders` (
   `id` int(10) UNSIGNED NOT NULL,
@@ -41,6 +74,9 @@ CREATE TABLE `orders` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `orders`
+--
 
 INSERT INTO `orders` (`id`, `user_id`, `total_amount`, `status`, `shipping_address`, `payment_method`, `created_at`) VALUES
 (1, 1, 3200.00, 'cancelled', NULL, NULL, '2026-06-11 18:24:41'),
@@ -55,6 +91,11 @@ INSERT INTO `orders` (`id`, `user_id`, `total_amount`, `status`, `shipping_addre
 (10, 1, 131800.00, 'pending', 'jan lang po', 'gcash', '2026-06-19 09:00:30'),
 (11, 1, 11800.00, 'pending', 'olivarez homes, barangay milagorsa, calamba city, laguna', 'gcash', '2026-06-19 10:34:41');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `order_items`
+--
 
 CREATE TABLE `order_items` (
   `id` int(10) UNSIGNED NOT NULL,
@@ -64,7 +105,9 @@ CREATE TABLE `order_items` (
   `unit_price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
+--
+-- Dumping data for table `order_items`
+--
 
 INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `quantity`, `unit_price`) VALUES
 (1, 1, 8, 1, 3200.00),
@@ -83,6 +126,11 @@ INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `quantity`, `unit_pri
 (14, 10, 14, 1, 11800.00),
 (15, 11, 14, 1, 11800.00);
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `products`
+--
 
 CREATE TABLE `products` (
   `id` int(10) UNSIGNED NOT NULL,
@@ -92,30 +140,37 @@ CREATE TABLE `products` (
   `image` varchar(255) DEFAULT '',
   `featured` tinyint(1) DEFAULT 0,
   `wide` tinyint(1) DEFAULT 0,
+  `stock` int(10) UNSIGNED NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `products`
+--
 
+INSERT INTO `products` (`id`, `name`, `category`, `price`, `image`, `featured`, `wide`, `stock`, `created_at`) VALUES
+(1, 'White Executive Longsleeve', 'Clothes', 4800.00, 'img/shirt2.png', 1, 1, 25, '2026-06-11 16:07:42'),
+(2, 'Black Executive Longsleeve', 'Clothes', 4800.00, 'img/shirt1.png', 0, 1, 25, '2026-06-11 16:07:42'),
+(3, 'Dark Blue Executive Longsleeve', 'Clothes', 4800.00, 'img/shirt3.png', 0, 1, 25, '2026-06-11 16:07:42'),
+(4, 'Biege Executive Longsleeve', 'Clothes', 4800.00, 'img/shirt4.png', 0, 1, 25, '2026-06-11 16:07:42'),
+(5, 'Raw Hem Denim Trousers', 'Clothes', 2100.00, 'img/baggy1.jpeg', 1, 0, 30, '2026-06-11 16:07:42'),
+(6, 'Washed Cotton Tee', 'Clothes', 890.00, 'img/cotton1.jpeg', 0, 0, 40, '2026-06-11 16:07:42'),
+(7, 'Merino Wool Crewneck', 'Clothes', 3400.00, 'img/wool1.jpeg', 0, 0, 20, '2026-06-11 16:07:42'),
+(8, 'Minimal Leather Bag', 'Accessories', 3200.00, 'img/bag1.jpeg', 1, 0, 15, '2026-06-11 16:07:42'),
+(9, 'Woven Leather Belt', 'Accessories', 1100.00, 'img/belt1.jpeg', 0, 0, 35, '2026-06-11 16:07:42'),
+(10, 'Brushed Silver Ring', 'Accessories', 980.00, 'img/ring1.jpeg', 0, 0, 30, '2026-06-11 16:07:42'),
+(11, 'DCO Wireless Speaker', 'Devices', 5500.00, 'img/speaker1.jpeg', 1, 0, 10, '2026-06-11 16:07:42'),
+(12, 'Noise-Cancel Earphones', 'Devices', 4200.00, 'img/device1.jpeg', 0, 0, 12, '2026-06-11 16:07:42'),
+(13, 'Noir Santal Eau de Parfum', 'Fragrance', 12600.00, 'img/perfume1.jpeg', 1, 0, 8, '2026-06-11 16:07:42'),
+(14, 'Amber & Oud Diffuser Set', 'Fragrance', 11800.00, 'img/perfume2.jpeg', 1, 0, 0, '2026-06-11 16:07:42'),
+(16, 'Venom Wave (5090)', 'Devices', 120000.00, 'img/venom-wave-5090-1781672757.jpg', 1, 0, 3, '2026-06-17 05:05:57');
 
-INSERT INTO `products` (`id`, `name`, `category`, `price`, `image`, `featured`, `wide`, `created_at`) VALUES
-(1, 'White Executive Longsleeve', 'Clothes', 4800.00, 'img/shirt2.png', 1, 1, '2026-06-11 16:07:42'),
-(2, 'Black Executive Longsleeve', 'Clothes', 4800.00, 'img/shirt1.png', 0, 1, '2026-06-11 16:07:42'),
-(3, 'Dark Blue Executive Longsleeve', 'Clothes', 4800.00, 'img/shirt3.png', 0, 1, '2026-06-11 16:07:42'),
-(4, 'Biege Executive Longsleeve', 'Clothes', 4800.00, 'img/shirt4.png', 0, 1, '2026-06-11 16:07:42'),
-(5, 'Raw Hem Denim Trousers', 'Clothes', 2100.00, 'img/baggy1.jpeg', 1, 0, '2026-06-11 16:07:42'),
-(6, 'Washed Cotton Tee', 'Clothes', 890.00, 'img/cotton1.jpeg', 0, 0, '2026-06-11 16:07:42'),
-(7, 'Merino Wool Crewneck', 'Clothes', 3400.00, 'img/wool1.jpeg', 0, 0, '2026-06-11 16:07:42'),
-(8, 'Minimal Leather Bag', 'Accessories', 3200.00, 'img/bag1.jpeg', 1, 0, '2026-06-11 16:07:42'),
-(9, 'Woven Leather Belt', 'Accessories', 1100.00, 'img/belt1.jpeg', 0, 0, '2026-06-11 16:07:42'),
-(10, 'Brushed Silver Ring', 'Accessories', 980.00, 'img/ring1.jpeg', 0, 0, '2026-06-11 16:07:42'),
-(11, 'DCO Wireless Speaker', 'Devices', 5500.00, 'img/speaker1.jpeg', 1, 0, '2026-06-11 16:07:42'),
-(12, 'Noise-Cancel Earphones', 'Devices', 4200.00, 'img/device1.jpeg', 0, 0, '2026-06-11 16:07:42'),
-(13, 'Noir Santal Eau de Parfum', 'Fragrance', 12600.00, 'img/perfume1.jpeg', 1, 0, '2026-06-11 16:07:42'),
-(14, 'Amber & Oud Diffuser Set', 'Fragrance', 11800.00, 'img/perfume2.jpeg', 1, 0, '2026-06-11 16:07:42'),
-(16, 'Venom Wave (5090)', 'Devices', 120000.00, 'img/venom-wave-5090-1781672757.jpg', 1, 0, '2026-06-17 05:05:57');
+-- --------------------------------------------------------
 
-
+--
+-- Table structure for table `users`
+--
 
 CREATE TABLE `users` (
   `id` int(10) UNSIGNED NOT NULL,
@@ -127,29 +182,43 @@ CREATE TABLE `users` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
+--
+-- Dumping data for table `users`
+--
 
 INSERT INTO `users` (`id`, `email`, `full_name`, `phone`, `address`, `password_hash`, `created_at`) VALUES
 (1, 'dacoliatpaul@gmail.com', 'Paul Joshua Dacoliat', '09692899764', 'olivarez homes, barangay milagorsa, calamba city, laguna', '$2y$10$7eJo2Ee3pGwDWMy84jbYWe1Po5nejLlbYpyB4tNJ.cJEIU.1ea0DC', '2026-06-09 02:38:58'),
 (2, 'dco@admin.com', NULL, NULL, NULL, '$2y$10$5JQR4DTiITL0mc1FjVvaNe01k3sALv1yMaJfrRH.Pewm1O9fM6NZK', '2026-06-15 23:35:43'),
 (3, 'maku@gmail.com', NULL, NULL, NULL, '$2y$10$0K2rBwlQkErh0/pjjiSvne/SZOMAUb43R6ttVA9V2wS9SU6Ii.yIa', '2026-06-18 17:04:52');
 
+--
+-- Indexes for dumped tables
+--
 
+--
+-- Indexes for table `cart_items`
+--
 ALTER TABLE `cart_items`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_cart_item` (`user_id`,`product_id`),
   ADD KEY `product_id` (`product_id`);
 
-
+--
+-- Indexes for table `contact_messages`
+--
 ALTER TABLE `contact_messages`
   ADD PRIMARY KEY (`id`);
 
-
+--
+-- Indexes for table `orders`
+--
 ALTER TABLE `orders`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
-
+--
+-- Indexes for table `order_items`
+--
 ALTER TABLE `order_items`
   ADD PRIMARY KEY (`id`),
   ADD KEY `order_id` (`order_id`),

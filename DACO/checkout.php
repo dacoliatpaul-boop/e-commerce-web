@@ -35,7 +35,7 @@ $paymentMethod   = $_POST['payment_method']   ?? '';
 function fetchCart(PDO $pdo, int $userId): array {
     $stmt = $pdo->prepare('
         SELECT ci.quantity,
-               p.id AS product_id, p.name, p.category, p.price, p.image
+               p.id AS product_id, p.name, p.category, p.price, p.image, p.stock
         FROM   cart_items ci
         JOIN   products   p ON p.id = ci.product_id
         WHERE  ci.user_id = ?
@@ -64,6 +64,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         $errors[] = 'Your cart is empty.';
     }
 
+    foreach ($cartItems as $item) {
+        if ((int) $item['stock'] < (int) $item['quantity']) {
+            $errors[] = $item['name'] . ' only has ' . (int) $item['stock'] . ' left in stock. Please update your cart.';
+        }
+    }
+
     if ($shippingAddress === '') {
         $errors[] = 'Please enter a delivery address.';
     }
@@ -76,6 +82,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         try {
             $pdo->beginTransaction();
 
+            // Re-check stock for every cart item right before committing the order,
+            // and lock those rows so two simultaneous checkouts can't both succeed
+            // on the last few units.
+            $stockStmt = $pdo->prepare('SELECT stock, name FROM products WHERE id = ? FOR UPDATE');
+            foreach ($cartItems as $item) {
+                $stockStmt->execute([$item['product_id']]);
+                $row = $stockStmt->fetch();
+
+                if (!$row) {
+                    throw new RuntimeException($item['name'] . ' is no longer available.');
+                }
+                if ((int) $row['stock'] < (int) $item['quantity']) {
+                    throw new RuntimeException(
+                        'Not enough stock for ' . $item['name'] . ' (only ' . (int) $row['stock'] . ' left). ' .
+                        'Please update your cart and try again.'
+                    );
+                }
+            }
+
             // 1. Create the order header
             $stmt = $pdo->prepare('
                 INSERT INTO orders (user_id, total_amount, status, shipping_address, payment_method)
@@ -84,10 +109,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             $stmt->execute([$userId, $total, $shippingAddress, $paymentMethod]);
             $orderId = (int) $pdo->lastInsertId();
 
-            // 2. Insert each order item (snapshot price)
+            // 2. Insert each order item (snapshot price) and decrement stock
             $itemStmt = $pdo->prepare('
                 INSERT INTO order_items (order_id, product_id, quantity, unit_price)
                 VALUES (?, ?, ?, ?)
+            ');
+            $stockUpdateStmt = $pdo->prepare('
+                UPDATE products SET stock = stock - ? WHERE id = ?
             ');
             foreach ($cartItems as $item) {
                 $itemStmt->execute([
@@ -96,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                     $item['quantity'],
                     $item['price'],
                 ]);
+                $stockUpdateStmt->execute([$item['quantity'], $item['product_id']]);
             }
 
             // 3. Clear the cart
@@ -114,6 +143,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             $cartItems = [];
             $total     = 0;
 
+        } catch (RuntimeException $e) {
+            $pdo->rollBack();
+            $errors[] = $e->getMessage();
         } catch (PDOException $e) {
             $pdo->rollBack();
             // Shows the real DB error so you can diagnose it
@@ -192,10 +224,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             <!-- Cart items -->
             <div class="cart-items-list">
                 <h2>Your Cart</h2>
-                <?php foreach ($cartItems as $item):
-                    $lineTotal = $item['price'] * $item['quantity'];
+                <?php
+                $hasStockIssue = false;
+                foreach ($cartItems as $item):
+                    $lineTotal     = $item['price'] * $item['quantity'];
+                    $itemStock     = (int) $item['stock'];
+                    $insufficient  = $itemStock < (int) $item['quantity'];
+                    if ($insufficient) { $hasStockIssue = true; }
                 ?>
-                <div class="cart-item">
+                <div class="cart-item<?= $insufficient ? ' stock-issue' : '' ?>">
                     <div class="cart-item-img">
                         <?php if (!empty($item['image'])): ?>
                             <img src="<?= htmlspecialchars($item['image']) ?>"
@@ -208,6 +245,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                         <span class="ci-category"><?= htmlspecialchars($item['category']) ?></span>
                         <span class="ci-name"><?= htmlspecialchars($item['name']) ?></span>
                         <span class="ci-qty">Qty: <?= $item['quantity'] ?></span>
+                        <?php if ($insufficient): ?>
+                            <span class="ci-stock-warning">
+                                <?= $itemStock <= 0 ? 'Now out of stock' : 'Only ' . $itemStock . ' left — reduce quantity' ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
                     <div class="cart-item-price">
                         &#8369; <?= number_format($lineTotal) ?>
@@ -257,9 +299,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                 </div>
 
                 <form method="POST" action="checkout.php" id="place-order-form">
-                    <button type="submit" name="place_order" class="btn-place-order">
+                    <button type="submit" name="place_order" class="btn-place-order" <?= $hasStockIssue ? 'disabled' : '' ?>>
                         Place Order
                     </button>
+                    <?php if ($hasStockIssue): ?>
+                        <p class="stock-issue-note">Update the quantities above before placing your order.</p>
+                    <?php endif; ?>
                 </form>
 
                 <a href="products.php" class="btn-keep-shopping">← Keep Shopping</a>
