@@ -52,7 +52,7 @@ $featured = array_filter($products, function($p) { return !empty($p['featured'])
             $hasImg    = !empty($p['image']);
         ?>
         <div class="<?php echo $cardClass; ?>" id="<?php echo $cardId; ?>">
-            <a href="products.php" class="product-img-wrap" style="display:block;">
+            <a href="products.php" class="product-img-wrap-feu" style="display:block;">
                 <?php if ($hasImg) { ?>
                     <img src="<?php echo htmlspecialchars($p['image']); ?>"
                          alt="<?php echo htmlspecialchars($p['name']); ?>"

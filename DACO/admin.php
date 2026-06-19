@@ -1,6 +1,6 @@
 <?php
 
-require_once 'config/app.php';   // $pdo + session
+require_once 'config/app.php';   
 
 
 define('ADMIN_EMAILS', ['dco@admin.com', 'owner@dco.com']); 
@@ -32,8 +32,6 @@ function paymentMethodLabel($method) {
     return $map[$method] ?? ($method ? ucfirst(str_replace('_', ' ', $method)) : 'N/A');
 }
 
-// ── Rebuilds products_config.php from the `products` table so the storefront ──
-// ── (index.php / products.php) always reflects what's in the database.       ──
 function regenerateProductsConfig(PDO $pdo): bool {
     $rows = $pdo->query('SELECT id, name, category, price, image, featured, wide FROM products ORDER BY id')->fetchAll();
 
@@ -661,12 +659,49 @@ $configWarning     = isset($_GET['config_warning']);
         /* ── Responsive ── */
         @media (max-width: 900px) {
             .admin-shell { grid-template-columns: 1fr; }
-            .admin-sidebar { display: none; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+            /* Sidebar becomes a horizontal, scrollable tab strip instead of
+               disappearing — tabs are plain links so this keeps every
+               section reachable without JS. */
+            .admin-sidebar {
+                position: sticky;
+                top: 56px;
+                height: auto;
+                width: 100%;
+                padding: 12px 0;
+                border-right: none;
+                border-bottom: 1px solid var(--faint);
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                z-index: 90;
+            }
+            .sidebar-section-label { display: none; }
+            .admin-sidebar nav {
+                flex-direction: row;
+                gap: 6px;
+                padding: 0 16px;
+                width: max-content;
+            }
+            .admin-nav-link { padding: 8px 14px; white-space: nowrap; }
+            .admin-sidebar .divider { display: none; }
+
             .admin-main { padding: 24px 16px 60px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+            /* Tables scroll horizontally instead of squeezing columns */
+            .section-block { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .data-table { min-width: 560px; }
         }
         @media (max-width: 500px) {
             .stats-grid { grid-template-columns: 1fr; }
+            .admin-topbar { padding: 0 16px; gap: 14px; }
+            .admin-topbar-label { display: none; }
+            .page-heading { font-size: 28px; }
+
+            .section-block-header { flex-wrap: wrap; gap: 4px; }
+            .status-form { flex-wrap: wrap; }
+            .modal-box { padding: 24px 20px; max-height: 90vh; }
+            .pf-checkboxes { flex-wrap: wrap; gap: 12px; }
         }
     </style>
 </head>

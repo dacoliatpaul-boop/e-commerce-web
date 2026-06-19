@@ -1,7 +1,5 @@
 <?php
-// config/app.php — PDO connection, included by login.php and register.php
 
-// ── Session cookie: tied to the browser process, not a fixed expiry ────────
 session_set_cookie_params([
     'lifetime' => 0,
     'path'     => '/',

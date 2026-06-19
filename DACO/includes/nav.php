@@ -1,21 +1,5 @@
 <?php
-/**
- * DCO — Shared Navigation
- *
- * SESSION BEHAVIOUR:
- *   ✓ Login session persists across refreshes (PHP session cookie, lifetime=0)
- *   ✓ Login session is cleared when the browser closes (lifetime=0 = session cookie)
- *   ✓ Cart is cleared on every page refresh AND when the browser closes
- *   ✓ Cart is stored server-side (DB) but gated by a sessionStorage token:
- *       – If the token is missing (refresh / new tab / browser re-open) → cart is wiped
- *       – If the token is present (same tab, no refresh) → cart is kept
- *
- * USER SESSION:
- *   PHP session cookie has lifetime=0 (set in config/app.php), meaning the browser
- *   discards it when all windows are closed. Refreshing the page keeps the cookie alive.
- */
 
-// Only start session if not already started (nav.php may be included after config/app.php)
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_lifetime', 0);
     session_start();
@@ -336,30 +320,7 @@ $isAdmin = $loggedIn && in_array($_SESSION['email'] ?? '', $_NAV_ADMIN_EMAILS, t
     // ── Session-scoped cart ───────────────────────────────────────
     // sessionStorage is wiped on refresh AND on browser/tab close.
     // If the token is absent it means the browser was refreshed or
-    // closed, so we clear the server-side cart before loading it.
-    <?php if ($loggedIn): ?>
-    (function () {
-        var TOKEN_KEY = 'dco_tab_token';
-        var token = sessionStorage.getItem(TOKEN_KEY);
-        if (!token) {
-            // New tab / refresh / browser re-open — clear the cart first, then load
-            var fd = new FormData();
-            fd.append('action', 'clear');
-            fetch('cart.php', { method: 'POST', body: fd })
-                .then(function () {
-                    // Generate and store a fresh token for this tab's lifetime
-                    sessionStorage.setItem(TOKEN_KEY, 'session-' + Date.now());
-                    refreshCart();
-                })
-                .catch(function () { refreshCart(); });
-        } else {
-            // Token exists — same tab, same session; load cart normally
-            refreshCart();
-        }
-    })();
-    <?php else: ?>
-    refreshCart();
-    <?php endif; ?>
+    
 
 })();
 </script>

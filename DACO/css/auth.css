@@ -25,22 +25,23 @@ body {
     text-decoration: none;
 }
 
-/* ── Page wrapper — centers card, back button floats left ── */
+/* ── Page wrapper — centers card ── */
 .page-wrapper {
     display: flex;
-    justify-content: center;
+    align-items: flex-start;
+    max-width: 420px;
     margin: 24px auto 60px;
     padding: 0 16px;
     position: relative;
 }
 
-/* ── Back button (floats left, aligned to card top) ── */
+/* ── Back button (absolutely positioned left of the centered card) ── */
 .btn-back {
     display: flex;
     align-items: center;
     gap: 6px;
     position: absolute;
-    left: 600px;
+    left: -120px;
     top: 0;
     padding: 10px 16px;
     background: #fff;
@@ -53,7 +54,6 @@ body {
     text-decoration: none;
     white-space: nowrap;
     transition: background 0.2s, border-color 0.2s;
-    height: fit-content;
 }
 .btn-back:hover {
     background: #1a1a1a;
@@ -61,9 +61,24 @@ body {
     border-color: #1a1a1a;
 }
 
+/* ── Responsive ── */
 @media (max-width: 700px) {
-    .page-wrapper { flex-direction: column; align-items: center; gap: 16px; }
-    .btn-back { position: static; align-self: flex-start; }
+    .page-wrapper { margin: 16px auto 40px; }
+    .btn-back { position: static; margin-bottom: 12px; align-self: flex-start; }
+    .page-wrapper { flex-direction: column; align-items: center; }
+    .DCO { font-size: 64px; letter-spacing: 4px; padding: 32px 0 0; }
+}
+
+@media (max-width: 480px) {
+    .DCO { font-size: 48px; letter-spacing: 2px; padding: 24px 0 0; }
+    .page-wrapper { margin: 16px auto 40px; padding: 0 12px; }
+    .login-page { padding: 32px 22px; border-radius: 12px; }
+    .login-page h1 { font-size: 22px; }
+}
+
+@media (max-width: 360px) {
+    .DCO { font-size: 38px; }
+    .login-page { padding: 28px 16px; }
 }
 
 /* ── Card ── */
@@ -274,3 +289,8 @@ body {
     transition: color 0.2s;
 }
 .modal-close:hover { color: #1a1a1a; }
+
+@media (max-width: 480px) {
+    .modal-box { padding: 32px 22px 28px; max-height: 80vh; }
+    .modal-box h2 { font-size: 14px; letter-spacing: 2px; }
+}

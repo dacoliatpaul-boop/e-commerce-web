@@ -515,6 +515,39 @@ $totalSpent  = array_sum(array_column($orders, 'total_amount'));
         }
 
         .btn-logout:hover { background: #fef2f2; }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .profile-wrapper { padding: 32px 16px 72px; }
+            .profile-header { margin-bottom: 32px; padding-bottom: 24px; }
+
+            .panel-body { padding: 16px; }
+            .panel-head { padding: 14px 16px; }
+
+            .order-summary-row {
+                flex-wrap: wrap;
+                gap: 8px 12px;
+                padding: 16px;
+            }
+            .order-date { flex-basis: 100%; order: 3; }
+            .order-amount { margin-left: auto; }
+
+            .order-detail { padding: 0 16px 16px; }
+
+            .order-item-line { flex-wrap: wrap; gap: 8px 14px; }
+            .order-item-name { flex-basis: calc(100% - 48px - 14px); }
+            .order-item-price { margin-left: auto; }
+
+            .order-timeline { flex-wrap: wrap; gap: 12px 0; }
+            .timeline-step { flex: 1 1 33%; }
+        }
+
+        @media (max-width: 400px) {
+            .stats-bar { font-size: .95em; }
+            .stat-cell { padding: 18px 16px; }
+            .order-num { min-width: auto; }
+            .timeline-step { font-size: .55rem; }
+        }
     </style>
 </head>
 <body>

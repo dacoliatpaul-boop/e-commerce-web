@@ -33,8 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setcookie('user_id',  $user['id'],    time() + $timeout, '/', '', false, true);
             setcookie('username', $user['email'], time() + $timeout, '/', '', false, true);
 
-            // Wipe any leftover cart from a previous browser session —
-            // logging in again means the old session (and its cart) is over.
+        
             $pdo->prepare('DELETE FROM cart_items WHERE user_id = ?')->execute([$user['id']]);
 
             $adminEmails = ['dco@admin.com', 'owner@dco.com'];
