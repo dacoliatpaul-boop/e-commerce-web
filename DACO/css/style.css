@@ -451,20 +451,28 @@ img, svg { max-width: 100%; height: auto; }
 
 /* ── Topbar / sidebar / cart drawer — mobile ── */
 @media (max-width: 640px) {
-    .topbar { padding: 0 16px; }
-    .topbar-logo { font-size: 30px; }
+    .topbar { padding: 0 12px; }
+    .topbar-logo { font-size: 22px; letter-spacing: 0.04em; }
     .topbar-user-email,
     .topbar-user-email + .auth-sep { display: none; }
+    #topbar-right { gap: 6px; }
+    .auth-link { font-size: 11px; letter-spacing: 0.03em; }
+    .auth-sep { font-size: 11px; }
 }
 @media (max-width: 420px) {
     .sidebar { width: 85vw; max-width: 280px; }
     #cart-drawer { width: 90vw; max-width: 360px; }
+    .topbar-logo { font-size: 20px; }
+    .auth-link { font-size: 10px; }
+    #topbar-right { gap: 5px; }
 }
 @media (max-width: 380px) {
-    #topbar-right { gap: 6px; }
-    .auth-link { font-size: 11px; }
-    .topbar-logo { font-size: 26px; }
+    #topbar-right { gap: 4px; }
+    .auth-link { font-size: 10px; letter-spacing: 0.02em; }
+    .topbar-logo { font-size: 18px; }
     .sidebar, #cart-drawer { padding: 20px; }
+    .auth-sep { display: none; }
+    #topbar-right { gap: 8px; }
 }
 
 

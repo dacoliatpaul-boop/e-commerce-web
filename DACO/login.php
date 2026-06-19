@@ -27,8 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['email']   = $user['email'];
 
-            // Set login timeout — change $timeout to however many seconds you want
-            $timeout = 5;
+
+            $timeout = 5000;
             $_SESSION['login_expiry'] = time() + $timeout;
             setcookie('user_id',  $user['id'],    time() + $timeout, '/', '', false, true);
             setcookie('username', $user['email'], time() + $timeout, '/', '', false, true);

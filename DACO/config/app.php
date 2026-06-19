@@ -11,14 +11,14 @@ session_set_cookie_params([
 
 session_start();
 
-// ── Database Configuration ──────────────────────────────────────────────────
+
 define('DB_HOST',     'localhost');
-define('DB_NAME',     'dcoweb');       // ← your database name
+define('DB_NAME',     'dcoweb');       
 define('DB_USER',     'root');
-define('DB_PASSWORD', '');             // change if your MySQL root has a password
+define('DB_PASSWORD', '');             
 define('DB_CHARSET',  'utf8mb4');
 
-// ── PDO Connection ──────────────────────────────────────────────────────────
+
 try {
     $pdo = new PDO(
         "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET,
@@ -34,14 +34,13 @@ try {
          </h2>");
 }
 
-// ── Auto-logout: destroy session + clear cart if login timeout has passed ───
+
 if (!empty($_SESSION['user_id']) && !empty($_SESSION['login_expiry'])) {
     if (time() > $_SESSION['login_expiry']) {
-        // Clear the user's cart from the database before wiping the session
         $pdo->prepare('DELETE FROM cart_items WHERE user_id = ?')
             ->execute([$_SESSION['user_id']]);
 
-        // Wipe session and cookies
+   
         $_SESSION = [];
         session_destroy();
         setcookie('user_id',  '', time() - 3600, '/', '', false, true);

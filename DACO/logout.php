@@ -1,12 +1,11 @@
 <?php
 require_once 'config/app.php';
 
-// Delete login cookies by setting expiry in the past
 setcookie('user_id',    '', time() - 3600, '/', '', false, true);
 setcookie('username',   '', time() - 3600, '/', '', false, true);
 setcookie('dco_expiry', '', time() - 3600, '/');
 
-// Also destroy session (used by shopping cart)
+
 $_SESSION = [];
 session_destroy();
 

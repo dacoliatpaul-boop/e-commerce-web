@@ -1,5 +1,6 @@
 <?php
-
+// Auto-generated from the products database table — see admin.php.
+// Manage products via Admin → Products instead of editing this file directly.
 $products = [
     [
         'id'       => 1,

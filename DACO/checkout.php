@@ -13,7 +13,6 @@ $errors  = [];
 $success = false;
 $order   = null;
 
-// ── Fetch user's saved address (to prefill the form) ───────────────────────
 try {
     $stmt = $pdo->prepare('SELECT address FROM users WHERE id = ?');
     $stmt->execute([$userId]);
@@ -28,11 +27,11 @@ $paymentMethods = [
     'gcash'         => 'GCash',
 ];
 
-// Values to repopulate the form with (POSTed value wins, otherwise saved address)
+
 $shippingAddress = $_POST['shipping_address'] ?? $savedAddress;
 $paymentMethod   = $_POST['payment_method']   ?? '';
 
-// ── Fetch current cart ───────────────────────────────────────────────────
+
 function fetchCart(PDO $pdo, int $userId): array {
     $stmt = $pdo->prepare('
         SELECT ci.quantity,
@@ -55,7 +54,7 @@ try {
 
 $total = array_sum(array_map(fn($i) => $i['price'] * $i['quantity'], $cartItems));
 
-// ── Place order on POST ──────────────────────────────────────────────────
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 
     $shippingAddress = trim($_POST['shipping_address'] ?? '');
@@ -138,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 <div class="checkout-wrapper">
 
     <?php if ($success && $order): ?>
-    <!-- ── ORDER CONFIRMED ─────────────────────────────────────────── -->
+
     <div class="order-confirmed">
         <div class="confirmed-icon">✓</div>
         <h1>Order Placed!</h1>
@@ -273,7 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 </div>
 
 <script>
-// Remove item via AJAX without full page reload
+
 document.querySelectorAll('.btn-remove-item').forEach(btn => {
     btn.addEventListener('click', async () => {
         const productId = btn.dataset.productId;

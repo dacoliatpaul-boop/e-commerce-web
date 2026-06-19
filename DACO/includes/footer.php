@@ -1,9 +1,6 @@
 <?php
-/**
- * DCO — Shared Footer
- * Include at the bottom of every page, just before </body>:
- *   include('includes/footer.php');
- */
+
+
 ?>
 <footer class="site-footer">
     <div class="footer-top">

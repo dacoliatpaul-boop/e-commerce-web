@@ -24,7 +24,7 @@ async function DCO_addToCart(name, category, price, productId, qty = 1) {
     try {
         const res  = await fetch('cart.php', { method: 'POST', body: fd });
 
-        // If user is not logged in, server returns 401 → redirect to login
+        
         if (res.status === 401) {
             window.location.href = 'login.php';
             return;
@@ -44,7 +44,6 @@ async function DCO_addToCart(name, category, price, productId, qty = 1) {
     }
 }
 
-/** Show a small toast notification */
 function DCO_showToast(message, isError = false) {
     let toast = document.getElementById('dco-toast');
     if (!toast) {
@@ -70,7 +69,7 @@ function DCO_showToast(message, isError = false) {
     }, 2500);
 }
 
-/** Update the cart item count badge in the navbar (if it exists) */
+
 function DCO_updateCartBadge(count) {
     const badge = document.getElementById('cart-badge');
     if (badge) {
@@ -79,7 +78,7 @@ function DCO_updateCartBadge(count) {
     }
 }
 
-// On page load, sync the badge from the server
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const res  = await fetch('cart.php?action=view');
@@ -87,5 +86,5 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await res.json();
             if (data.success) DCO_updateCartBadge(data.cart_count);
         }
-    } catch (_) { /* not logged in or network error — badge stays empty */ }
+    } catch (_) { }
 });

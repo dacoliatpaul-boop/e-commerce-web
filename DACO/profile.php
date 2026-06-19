@@ -2,7 +2,7 @@
 require_once 'config/app.php';
 include 'includes/nav.php';
 
-// Must be logged in
+
 if (empty($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;

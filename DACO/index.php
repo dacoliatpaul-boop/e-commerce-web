@@ -3,7 +3,7 @@ include('includes/nav.php');
 include('products_config.php');
 
 if (!isset($products)) { $products = []; }
-// Pull only featured products for the homepage showcase
+
 $featured = array_filter($products, function($p) { return !empty($p['featured']); });
 ?>
 <!DOCTYPE html>
@@ -107,7 +107,7 @@ $featured = array_filter($products, function($p) { return !empty($p['featured'])
             <span class="cat-num">03</span>
             <svg class="cat-icon" viewBox="0 0 36 36" fill="none" stroke="#171717" stroke-width="1.2"><rect x="5" y="8" width="26" height="20" rx="2"/><path d="M5 14h26M13 8v6M23 8v6"/></svg>
             <span class="cat-name">Devices</span>
-            <span class="cat-count">2 items</span>
+            <span class="cat-count">3 items</span>
         </a>
         <a href="products.php" class="cat-card" id="cat-fragrance">
             <span class="cat-num">04</span>

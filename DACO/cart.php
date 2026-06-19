@@ -3,7 +3,7 @@ require_once 'config/app.php';
 
 header('Content-Type: application/json');
 
-// Must be logged in
+
 if (empty($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Please log in to use the cart.']);
@@ -13,7 +13,6 @@ if (empty($_SESSION['user_id'])) {
 $userId = (int) $_SESSION['user_id'];
 $action = $_GET['action'] ?? ($_POST['action'] ?? 'view');
 
-// ── Helper: return current cart ──────────────────────────────────────────
 function getCart(PDO $pdo, int $userId): array {
     $stmt = $pdo->prepare('
         SELECT ci.id, ci.quantity,
@@ -27,7 +26,6 @@ function getCart(PDO $pdo, int $userId): array {
     return $stmt->fetchAll();
 }
 
-// ── Helper: cart total ───────────────────────────────────────────────────
 function getCartTotal(array $items): float {
     return array_sum(array_map(fn($i) => $i['price'] * $i['quantity'], $items));
 }
@@ -35,7 +33,6 @@ function getCartTotal(array $items): float {
 try {
     switch ($action) {
 
-        // ── ADD TO CART ──────────────────────────────────────────────────
         case 'add': {
             $productId = (int) ($_POST['product_id'] ?? 0);
             $qty       = max(1, (int) ($_POST['quantity'] ?? 1));
@@ -45,7 +42,7 @@ try {
                 exit;
             }
 
-            // Verify product exists
+      
             $check = $pdo->prepare('SELECT id FROM products WHERE id = ?');
             $check->execute([$productId]);
             if (!$check->fetch()) {
@@ -53,7 +50,6 @@ try {
                 exit;
             }
 
-            // Insert or increment quantity
             $stmt = $pdo->prepare('
                 INSERT INTO cart_items (user_id, product_id, quantity)
                 VALUES (?, ?, ?)
@@ -72,7 +68,7 @@ try {
             break;
         }
 
-        // ── REMOVE FROM CART ─────────────────────────────────────────────
+       
         case 'remove': {
             $productId = (int) ($_POST['product_id'] ?? 0);
 
@@ -92,7 +88,7 @@ try {
             break;
         }
 
-        // ── CLEAR CART ───────────────────────────────────────────────────
+       
         case 'clear': {
             $stmt = $pdo->prepare('DELETE FROM cart_items WHERE user_id = ?');
             $stmt->execute([$userId]);
@@ -107,7 +103,7 @@ try {
             break;
         }
 
-        // ── VIEW CART (default) ──────────────────────────────────────────
+       
         default: {
             $items = getCart($pdo, $userId);
             echo json_encode([

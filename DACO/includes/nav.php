@@ -98,11 +98,7 @@ $isAdmin = $loggedIn && in_array($_SESSION['email'] ?? '', $_NAV_ADMIN_EMAILS, t
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   DCO CART — Server-side via cart.php API
-   Cart is stored in the DB (cart_items table) per logged-in user.
-   Unauthenticated users are redirected to login.php on add.
-   ═══════════════════════════════════════════════════════════════ */
+
 
 (function () {
     'use strict';
@@ -280,7 +276,7 @@ $isAdmin = $loggedIn && in_array($_SESSION['email'] ?? '', $_NAV_ADMIN_EMAILS, t
         closeCart();
     });
 
-    // ── Topbar hide/show on scroll ────────────────────────────────
+
     var topbar  = document.getElementById('topbar');
     var lastY   = 0;
     var ticking = false;
@@ -303,12 +299,11 @@ $isAdmin = $loggedIn && in_array($_SESSION['email'] ?? '', $_NAV_ADMIN_EMAILS, t
         }
     });
 
-    // ── Escape key closes both ────────────────────────────────────
+
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') { closeSidebar(); closeCart(); }
     });
 
-    // ── HTML escape helper ────────────────────────────────────────
     function escHtml(str) {
         return String(str)
             .replace(/&/g, '&amp;')
@@ -317,9 +312,6 @@ $isAdmin = $loggedIn && in_array($_SESSION['email'] ?? '', $_NAV_ADMIN_EMAILS, t
             .replace(/"/g, '&quot;');
     }
 
-    // ── Session-scoped cart ───────────────────────────────────────
-    // sessionStorage is wiped on refresh AND on browser/tab close.
-    // If the token is absent it means the browser was refreshed or
     
 
 })();
